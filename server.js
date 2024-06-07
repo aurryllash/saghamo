@@ -1,7 +1,7 @@
 const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
-const createReadStream = require('fs').createReadStream;
+const fs = require('fs')
 const path = require('path')
 const process = require('process')
 const { google } = require('googleapis')
@@ -19,7 +19,7 @@ mongoose.connect('mongodb://127.0.0.1:27017/aws')
     })
 
 const pKey = require('./saydumlo-74b07a3e0b17.json')
-const SCOPES = ['https://www.googleapis.com/auth/drive.file']
+const SCOPES = ['https://www.googleapis.com/auth/drive']
 
 async function authorize() {
     const jwtClient = new google.auth.JWT(
@@ -32,30 +32,40 @@ async function authorize() {
     return jwtClient
 }
 
-async function uploadFile(authClient) {
-    const drive = google.drive({ version: 'v3', auth: authClient });
-
-    const filePath = path.join(__dirname, 'public/images/Hajime-Sorayama.jpg');
-
-    const file = await drive.files.create({
-        media: {
-            body: createReadStream(filePath)
-        },
-        fields: 'id',
-        requestBody: {
-            name: path.basename(filePath),
+async function uploadFile(authClient){
+    return new Promise((resolve,rejected)=>{
+        const drive = google.drive({version:'v3',auth:authClient}); 
+        var fileMetaData = {
+            name:'test.txt', // A folder ID to which file will get uploaded
+            parents: ['15RtGUfnVmVlQOkL63d0Zdvg52AjBMRnB']
         }
-    })
-    console.log(file.data.id)
+
+        drive.files.create({
+            resource:fileMetaData,
+            media:{
+                body: fs.createReadStream('test.txt'), // files that will get uploaded
+                mimeType:'text/plain'
+            },
+            fields:'id'
+        },
+        function(error,file){
+            if(error){
+                return rejected(error)
+            }
+            resolve(file);
+        })
+    });
 }
 
-(async () => {
-    try {
-      const authClient = await authorize();
-      await uploadFile(authClient);
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  })();
+authorize().then(uploadFile).catch("error",console.error());
+
+// (async () => {
+//     try {
+//       const authClient = await authorize();
+//       await uploadFile(authClient);
+//     } catch (error) {
+//       console.error('Error:', error);
+//     }
+//   })();
 
 
