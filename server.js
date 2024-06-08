@@ -2,17 +2,23 @@ const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
 const fs = require('fs')
-const path = require('path')
-const process = require('process')
 const { google } = require('googleapis')
+const streamifier = require('streamifier')
 
+const multer = require('multer')
+const storage = multer.memoryStorage()
+const upload = multer({ storage: storage })
+
+app.use(express.urlencoded({ extended: true }))
 app.use(express.static('public'))
+app.set('view engine', 'ejs');
+app.use(express.json())
 
 
 mongoose.connect('mongodb://127.0.0.1:27017/aws')
     .then(() => {
         console.log("database is connected successfully!")
-        app.listen(3001, () => console.log('Express server is running on port 3000'))
+        app.listen(3000, () => console.log('Express server is running on port 3000'))
     })
     .catch(error => {
         console.log("Error connecting to mongoDB, Error: " + error)
@@ -32,19 +38,23 @@ async function authorize() {
     return jwtClient
 }
 
-async function uploadFile(authClient){
-    return new Promise((resolve,rejected)=>{
-        const drive = google.drive({version:'v3',auth:authClient}); 
+async function uploadFile(authClient, fileBuffer, filename, mimetype) {
+    return new Promise((resolve, rejected)=>{
+
+        const drive = google.drive({version:'v3', auth:authClient}); 
+
         var fileMetaData = {
-            name:'test.txt', // A folder ID to which file will get uploaded
+            name:filename,
             parents: ['15RtGUfnVmVlQOkL63d0Zdvg52AjBMRnB']
         }
 
-        drive.files.create({
+        const file = drive.files.create({
             resource:fileMetaData,
-            media:{
-                body: fs.createReadStream('test.txt'), // files that will get uploaded
-                mimeType:'text/plain'
+
+            media:{ 
+                // body: fs.createReadStream('./public/images/Hajime-Sorayama.jpg'),
+                body: streamifier.createReadStream(fileBuffer),
+                mimeType: mimetype
             },
             fields:'id'
         },
@@ -57,15 +67,25 @@ async function uploadFile(authClient){
     });
 }
 
-authorize().then(uploadFile).catch("error",console.error());
+app.post('/products/upload', upload.single('image'), async (req, res) => {
+    try {
+        const authClient = await authorize();
+        const fileBuffer = req.file.buffer;
+        const mimeType = req.file.mimetype;
+        const filename = req.file.originalname;
 
-// (async () => {
-//     try {
-//       const authClient = await authorize();
-//       await uploadFile(authClient);
-//     } catch (error) {
-//       console.error('Error:', error);
-//     }
-//   })();
+        const file = await uploadFile(authClient, fileBuffer, filename, mimeType)
+        const fileId = file.data.id
+        
+    } catch(error) {
+        console.log(error + " something went wrong!!!")
+    }
+})
+
+app.get('/', (req, res) => {
+    res.render('home')
+})
+
+// authorize().then(uploadFile).catch("error",console.error());
 
 
