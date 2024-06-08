@@ -70,13 +70,18 @@ async function uploadFile(authClient, fileBuffer, filename, mimetype) {
 app.post('/products/upload', upload.single('image'), async (req, res) => {
     try {
         const authClient = await authorize();
+
         const fileBuffer = req.file.buffer;
         const mimeType = req.file.mimetype;
         const filename = req.file.originalname;
 
         const file = await uploadFile(authClient, fileBuffer, filename, mimeType)
         const fileId = file.data.id
-        
+        if(fileId) {
+            const ProductsModule = require('./src/Modules/products')
+            req.body.google_drive_file_id = fileId
+            await new ProductsModule(req.body).save()
+        }
     } catch(error) {
         console.log(error + " something went wrong!!!")
     }
