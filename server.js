@@ -2,8 +2,8 @@ const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
 const fs = require('fs')
-const { google } = require('googleapis')
 const streamifier = require('streamifier')
+const cloudinary = require('cloudinary').v2
 
 const multer = require('multer')
 const storage = multer.memoryStorage()
@@ -24,73 +24,31 @@ mongoose.connect('mongodb://127.0.0.1:27017/aws')
         console.log("Error connecting to mongoDB, Error: " + error)
     })
 
-const pKey = require('./saydumlo-74b07a3e0b17.json')
-const SCOPES = ['https://www.googleapis.com/auth/drive']
 
-async function authorize() {
-    const jwtClient = new google.auth.JWT(
-        pKey.client_email,
-        null,
-        pKey.private_key,
-        SCOPES
-    )
-    await jwtClient.authorize();
-    return jwtClient
-}
 
-async function uploadFile(authClient, fileBuffer, filename, mimetype) {
-    return new Promise((resolve, rejected)=>{
 
-        const drive = google.drive({version:'v3', auth:authClient}); 
-
-        var fileMetaData = {
-            name:filename,
-            parents: ['15RtGUfnVmVlQOkL63d0Zdvg52AjBMRnB']
-        }
-
-        const file = drive.files.create({
-            resource:fileMetaData,
-
-            media:{ 
-                // body: fs.createReadStream('./public/images/Hajime-Sorayama.jpg'),
-                body: streamifier.createReadStream(fileBuffer),
-                mimeType: mimetype
-            },
-            fields:'id'
-        },
-        function(error,file){
-            if(error){
-                return rejected(error)
-            }
-            resolve(file);
-        })
+app.post('/products/upload', async (req, res) => {
+    (async function() {
+    
+        // Configuration
+    cloudinary.config({ 
+        cloud_name: "delmc0t3t", 
+        api_key: "724299298349376", 
+        api_secret: "S4G2TioPP9ZoqJIaujPRas8h6qw" // Click 'View Credentials' below to copy your API secret
     });
-}
-
-app.post('/products/upload', upload.single('image'), async (req, res) => {
-    try {
-        const authClient = await authorize();
-
-        const fileBuffer = req.file.buffer;
-        const mimeType = req.file.mimetype;
-        const filename = req.file.originalname;
-
-        const file = await uploadFile(authClient, fileBuffer, filename, mimeType)
-        const fileId = file.data.id
-        if(fileId) {
-            const ProductsModule = require('./src/Modules/products')
-            req.body.google_drive_file_id = fileId
-            await new ProductsModule(req.body).save()
-        }
-    } catch(error) {
-        console.log(error + " something went wrong!!!")
-    }
+        
+    // Upload an image
+    const uploadResult = await cloudinary.uploader.upload("./public/images/Hajime-Sorayama.jpg", {
+        asset_folder: 'saydumlo'
+    }).catch((error)=>{console.log(error)});
+        
+    console.log(uploadResult); 
+})();
 })
 
 app.get('/', (req, res) => {
     res.render('home')
 })
 
-// authorize().then(uploadFile).catch("error",console.error());
 
 
