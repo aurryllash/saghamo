@@ -13,7 +13,7 @@
     
     <div class="container">
         <h1>ADD PRODUCT</h1>
-        <form id="productForm" style="width: 400px;" action="/products/upload" enctype="multipart/form-data" method="post">
+        <form id="productForm" style="width: 400px;" action="/products/upload" method="post">
             <div class="mb-3">
                 <label for="title" class="form-label">Title</label>
                 <input type="text" class="form-control" name="title" id="title" placeholder="Adidas Hoodie..." required>
@@ -24,10 +24,28 @@
             </div>
             <div class="mb-3">
                 <label for="Image" class="form-label">Image</label>
-                <input type="file" class="form-control" name="image" id="Image" required>
+                <input type="file" class="form-control" name="image" id="Image"  accept="image/*" required>
             </div>
             <button type="submit" id="submitBtn" class="btn btn-success">Submit</button>
             <a class="btn btn-light" href="/home" style="background-color: rgb(189, 189, 189); color: whitesmoke; margin-left: 20px;">Cancel</a>
         </form>
     </div>
 </section>
+
+<script>
+    const form = document.getElementById('productForm')
+
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        
+        const formData = new FormData(form)
+        
+        fetch('/products/upload', {
+            method: 'post',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(res => console.log(res))
+        .catch(error => console.log(error))
+    })
+</script>
