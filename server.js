@@ -9,7 +9,7 @@ app.use(express.static('public'))
 app.set('view engine', 'ejs');
 app.use(express.json())
 app.use(fileUpload({ useTempFiles: true,tempFileDir: '/tmp/' }));
-app.use('/products', productsRoute)
+app.use('/events', productsRoute)
 
 
 mongoose.connect('mongodb://127.0.0.1:27017/aws')
