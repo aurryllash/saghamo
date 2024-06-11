@@ -1,0 +1,72 @@
+<%- include('./partials/header')%>
+<style>
+    h1{
+
+    font-size: 30px;
+    font-weight: 900;
+    margin-top: 40px;
+    margin-left: 20px;
+
+}
+</style>
+<section style="padding: 0 0 150px 0; min-height: 100vh;" >
+    
+    <div class="container">
+        <h1>ADD ARTIST</h1>
+        <form id="productForm" style="width: 400px;" action="/artists/upload" method="post">
+            <div class="mb-3">
+                <label for="name" class="form-label">Name</label>
+                <input type="text" class="form-control" name="name" id="name" placeholder="yazv..." required>
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <input type="text" class="form-control" name="description" id="description" placeholder="description..." required>
+            </div>
+            <div class="mb-3">
+                <label for="SoundcloudEmbedLink" class="form-label">Soundcloud Embed Link</label>
+                <input type="text" class="form-control" name="SoundcloudEmbedLink" id="SoundcloudEmbedLink" placeholder="Embed..." required>
+            </div>
+            <div class="mb-3">
+                <label for="instagram" class="form-label">Instagram</label>
+                <input type="text" class="form-control" name="instagram" id="instagram">
+            </div>
+            <div class="mb-3">
+                <label for="facebook" class="form-label">Facebook</label>
+                <input type="text" class="form-control" name="facebook" id="facebook">
+            </div>
+            <div class="mb-3">
+                <label for="youtube" class="form-label">Youtube</label>
+                <input type="text" class="form-control" name="youtube" id="youtube">
+            </div>
+            <div class="mb-3">
+                <label for="soundcloud" class="form-label">Soundcloud</label>
+                <input type="text" class="form-control" name="soundcloud" id="soundcloud">
+            </div>
+            <div class="mb-3">
+                <label for="image" class="form-label">Image</label>
+                <input type="file" class="form-control" name="image" id="image"  accept="image/*" required>
+            </div>
+            <button type="submit" id="submitBtn" class="btn btn-success">Submit</button>
+            <a class="btn btn-light" href="/home" style="background-color: rgb(189, 189, 189); color: whitesmoke; margin-left: 20px;">Cancel</a>
+        </form>
+    </div>
+</section>
+<script>
+    const form = document.getElementById('productForm')
+
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        
+        const formData = new FormData(form)
+        
+        fetch('/artists/upload', {
+            method: 'post',
+            body: formData
+        })
+        .then(res => res.json())
+        .then(res => {
+            window.location.href = '/artists'
+        })
+        .catch(error => console.log(error))
+    })
+</script>

@@ -3,6 +3,7 @@ const app = express()
 const mongoose = require('mongoose')
 const fileUpload = require('express-fileupload');
 const productsRoute = require('./src/Routes/products')
+const artistsRoute = require('./src/Routes/artists')
 
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static('public'))
@@ -10,6 +11,7 @@ app.set('view engine', 'ejs');
 app.use(express.json())
 app.use(fileUpload({ useTempFiles: true,tempFileDir: '/tmp/' }));
 app.use('/events', productsRoute)
+app.use('/artists', artistsRoute)
 
 
 mongoose.connect('mongodb://127.0.0.1:27017/aws')

@@ -7,9 +7,9 @@ const productSchema = require('../Modules/products')
 router.post('/upload', async (req, res) => {
     try {
 
-            if (!req.files || Object.keys(req.files).length === 0) {
-                return res.status(400).send('No files were uploaded.');
-              }
+        if (!req.files || Object.keys(req.files).length === 0) {
+            return res.status(400).send('No files were uploaded.');
+            }
 
         cloudinary.config({ 
             cloud_name: "delmc0t3t", 
@@ -25,8 +25,7 @@ router.post('/upload', async (req, res) => {
             fetch_format: 'auto',
             quality: 'auto'
         });
-        
-        // Transform the image: auto-crop to square aspect_ratio
+
         const autoCropUrl = cloudinary.url(uploadResult.public_id, {
             crop: 'auto',
             gravity: 'auto',
@@ -72,7 +71,7 @@ router.delete('/file/:id', async (req, res) => {
             api_key: "724299298349376", 
             api_secret: "S4G2TioPP9ZoqJIaujPRas8h6qw"
         });
-        const deletedFile = await  cloudinary.uploader.destroy(products.public_id, (res) => console.log(res))
+        const deletedFile = await  cloudinary.uploader.destroy(products.public_id)
         if(deletedFile) {
             const deleteFromDB = await productSchema.findByIdAndDelete(req.params.id)
         }

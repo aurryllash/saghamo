@@ -70,18 +70,18 @@ nav .page-link:hover {
   <div class="product" style="margin-top: 100px; margin-bottom: 100px; ">
 
     <ul class="containers">
-        <% products.forEach(item => { %>
+        <% artists.forEach(item => { %>
       <li>
           <div class="card" style="width: 18rem; height: 500px;" >
             <div class="img_container" style="height: 60%;">
-                <a href="/products/api/<%= item._id %>"><img src="<%= item.url %>" class="card-img-top" alt="Product Image"></a>
+                <a href="/artists/api/<%= item.name %>"><img src="<%= item.url %>" class="card-img-top" alt="Artist Image"></a>
             </div>
             <div class="card-body">
-              <h5 class="card-title"><%= item.title %></h5>
+              <h5 class="card-title"><%= item.name %></h5>
               <h5 class="price"><%= item.description %></h5>
             </div>
             <div class="buttons">
-                <button type="button" class="btn btn-dark delete-btn" data-id="<%= item._id %>">DELETE</button>
+                <button type="button" class="btn btn-dark delete-btn" data-id="<%= item.name %>">DELETE</button>
             </div>
           </div>
       </li>
@@ -99,7 +99,7 @@ nav .page-link:hover {
     button.addEventListener('click', () => {
       const id = button.dataset.id
       console.log(button.dataset.id)
-      fetch(`/events/file/${id}`, {
+      fetch(`/artists/file/${id}`, {
       method: "DELETE"
     })
     .then(response => {
@@ -111,13 +111,4 @@ nav .page-link:hover {
     .catch(err => console.log(err))
     })
   })
-
-//   document.getElementById('selectSort').addEventListener('change', () => {
-    
-//     var selectSort = event.target.value;
-//     if(selectSort != 'default') {
-//       window.location.href = selectSort
-//     }
-//   })
-  
 </script>
