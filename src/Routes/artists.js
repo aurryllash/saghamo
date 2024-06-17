@@ -1,7 +1,13 @@
+require('dotenv').config()
 const express = require('express');
 const router = express.Router()
 const cloudinary = require('cloudinary').v2
 const artistsSchema = require('../Modules/artists')
+var LastFmNode = require('lastfm').LastFmNode;
+
+const CLIENT_ID = process.env.CLIENT_ID
+const CLIENT_SECRET = process.env.CLIENT_SECRET
+const REDIRECT_URL = process.env.REDIRECT_URL
 
 router.post('/upload', async (req, res) => {
     try {
@@ -77,6 +83,34 @@ router.get('/upload', (req, res) => {
 
 router.get('/api/:name', async (req, res) => {
     try {
+
+        var lastfm = new LastFmNode({
+            api_key: 'efedf2183d609633cf0f25b0caa931eb',   
+            secret: '0a76ba52ae9311cb9de6ae6af98b834b',
+          });
+        // var request = lastfm.request("artist.getInfo", {
+        //     artist: "Erekle Deisadze",
+        //     handlers: {
+        //         success: function(data) {
+        //             console.log("Success: " + JSON.stringify(data, null, 2));
+        //         },
+        //         error: function(error) {
+        //             console.log("Error: " + error.message);
+        //         }
+        //     }
+        // });
+        var request = lastfm.request("artist.getTopTracks", {
+            artist: 'kayakata',
+            handlers: {
+                success: function(data) {
+                    console.log("Success: " + JSON.stringify(data, null, 2));
+                },
+                error: function(error) {
+                    console.log("Error: " + error.message);
+                }
+            }
+        });
+
         const artist = await artistsSchema.aggregate([
             {
                 $match: { name: req.params.name }

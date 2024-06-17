@@ -1,0 +1,74 @@
+<%- include('./partials/header')%>
+<style>
+  .containers {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr));
+    grid-gap: 20px;
+    justify-content: center;
+}
+@media screen and (max-width: 600px) {
+    .containers {
+      grid-template-columns: repeat(1, 1fr);
+    }
+  }
+li {
+  list-style-type: none;
+}
+
+.card {
+    height: 400px;
+    padding: 20px 10px;
+    border: none;
+    position: relative;
+    cursor: pointer;
+    overflow: hidden;
+}
+
+.card img {
+    width: 100%;
+    height: auto;
+    transition: ease-in 0.2s;
+    border-radius: 5px;
+}
+
+.card-body{
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+}
+
+.card-title {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 5px 0;
+}
+.price {
+    font-size: 17px;
+    margin: 5px 0;
+    color: rgb(95, 95, 95);
+}
+
+.buttons {
+    margin-top: auto;
+}
+
+nav .page-link {
+  color: black;
+}
+nav .page-link:hover {
+  color: black;
+}
+.form-select:focus {
+    outline: none;
+    box-shadow: none;
+    border-color: inherit;
+  }
+ 
+</style>
+
+<section style="min-height: 100vh" class="container">
+    <h1>Home Page</h1>
+    
+</section>
+
+</body>

@@ -54,7 +54,7 @@
       <div class="links">
         <% Object.keys(artist[0].links).forEach(key => { %>
             <% if(artist[0].links[key]) { %>
-                <p><%= key %>: <%= artist[0].links[key] %></p>
+                <p><a href="<%= artist[0].links[key] %>"><%= key %></a></p>
             <% } %>
         <% }) %>
       </div>

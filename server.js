@@ -24,8 +24,11 @@ mongoose.connect('mongodb://127.0.0.1:27017/aws')
     })
 
 
+app.get('/home', (req, res) => {
+    res.render('home')
+})
 app.get('/', (req, res) => {
-    res.json('sdsfsd')
+    res.redirect('/home')
 })
 
 
