@@ -6,17 +6,22 @@ const productsRoute = require('./src/Routes/products')
 const artistsRoute = require('./src/Routes/artists')
 const registrationRoute = require('./src/Routes/registration')
 const loginRoute = require('./src/Routes/login')
+const setUserStatus = require('./src/middleware/userStatus')
+var cookieParser = require('cookie-parser')
 
+app.use(cookieParser())
 app.use(express.urlencoded({ extended: true }))
 app.use(express.static('public'))
 app.set('view engine', 'ejs');
 app.use(express.json())
 app.use(fileUpload({ useTempFiles: true,tempFileDir: '/tmp/' }));
 
+
 app.use('/events', productsRoute)
 app.use('/artists', artistsRoute)
 app.use('/registration', registrationRoute)
 app.use('/login', loginRoute)
+app.use(setUserStatus)
 
 
 mongoose.connect('mongodb://127.0.0.1:27017/aws')
@@ -33,6 +38,10 @@ app.get('/home', (req, res) => {
     res.render('home')
 })
 app.get('/', (req, res) => {
+    res.redirect('/home')
+})
+app.get('/logout', (req, res) => {
+    res.clearCookie('token')
     res.redirect('/home')
 })
 

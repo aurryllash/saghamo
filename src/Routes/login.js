@@ -13,13 +13,13 @@ router.post('/', async (req, res) => {
     try {
         const user = await User.find({ email: req.body.email })
         if(!user) {
-            return res.status(401).json('email or password is wrong.')
+            return res.status(400).json({ message: 'Incorrect email or password' })
         }
         const match = await bcrypt.compare(req.body.password, user[0].password);
         if(!match) {
             return res.status(401).json('email or password is wrong.')
         }
-        const token = jwt.sign({ userId: user._id }, 'your-secret-key', {
+        const token = jwt.sign({ userId: user._id, userRole: user.role }, 'your-secret-key', {
             expiresIn: '1h',
             });
         res.cookie(

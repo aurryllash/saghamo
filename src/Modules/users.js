@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const joi = require('joi')
 
 const usersSchema = new mongoose.Schema({
     username: {
@@ -20,4 +21,16 @@ const usersSchema = new mongoose.Schema({
     }
 })
 
+function userValidate(user) {
+    const schema = joi.object({
+        username: joi.string().min(5).max(100).required(),
+        email: joi.string().min(5).max(255).required().email(),
+        role: joi.string().valid('user', 'admin'),
+        password: joi.string().min(5).max(100).required(),
+    })
+
+    return schema.validate(user)
+}
+
 module.exports = mongoose.model('User', usersSchema);
+module.exports.UserValidate = userValidate

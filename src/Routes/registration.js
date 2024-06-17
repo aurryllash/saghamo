@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router()
 const bcrypt = require('bcrypt')
-const User = require('../Modules/users')
+const { User, UserValidate } = require('../Modules/users')
 
 router.get('/', (req, res) => {
 
@@ -9,7 +9,10 @@ router.get('/', (req, res) => {
 })
 
 router.post('/', async (req, res) => {
-
+    const { error } = UserValidate(req.body);
+    if (error) {
+      return res.status(400).json({ errors: error.details.map(detail => detail.message) });
+    }
     try {
         const salt = 10;
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
