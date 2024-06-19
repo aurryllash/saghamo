@@ -18,10 +18,6 @@ router.post('/upload', requirePermits('add_product'), async (req, res) => {
             api_key: "724299298349376", 
             api_secret: "S4G2TioPP9ZoqJIaujPRas8h6qw"
         });
-            
-        // const uploadResult = await cloudinary.uploader.upload(req.files.image.tempFilePath, {
-        //     asset_folder: 'saydumlo'
-        // }).catch((error)=>{console.log(error)});
 
         const imagesArray = Object.values(req.files).map(async file => {
             const uploadResult = await cloudinary.uploader.upload(file.tempFilePath, {
@@ -87,10 +83,16 @@ router.delete('/file/:id', requirePermits('delete_product'), async (req, res) =>
             api_key: "724299298349376", 
             api_secret: "S4G2TioPP9ZoqJIaujPRas8h6qw"
         });
-        const deletedFile = await  cloudinary.uploader.destroy(products.public_id)
-        if(deletedFile) {
+
+        const productsArray = Object.values(products.images).map(async file => {
+            const deletedFile = await cloudinary.uploader.destroy(file.public_id)
+        })
+        const destroyedImages = await Promise.all(productsArray)
+
+        if(destroyedImages) {
             const deleteFromDB = await productSchema.findByIdAndDelete(req.params.id)
         }
+
         return res.status(200).send("Deleted succesfully")
     } catch(error) {
         console.log('something went wrong')
