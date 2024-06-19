@@ -6,6 +6,7 @@ const { User, UserValidate } = require('../Modules/users')
 router.get('/', (req, res) => {
 
     res.render('registration')
+    
 })
 
 router.post('/', async (req, res) => {
@@ -14,7 +15,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ errors: error.details.map(detail => detail.message) });
     }
     try {
-        const salt = 10;
+        const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
         const user = new User({
             username: req.body.username,

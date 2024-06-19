@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router()
 const cloudinary = require('cloudinary').v2
 const productSchema = require('../Modules/products')
-
+const { requirePermits, requireLogin } = require('../middleware/RoleSecurity')
 
 router.post('/upload', async (req, res) => {
     try {
@@ -20,6 +20,12 @@ router.post('/upload', async (req, res) => {
         const uploadResult = await cloudinary.uploader.upload(req.files.image.tempFilePath, {
             asset_folder: 'saydumlo'
         }).catch((error)=>{console.log(error)});
+
+        for (const [key, file] of Object.entries(req.files)) {
+            let uploadSecondGradeImages = await cloudinary.uploader.upload(file.tempFilePath, {
+                asset_folder: 'saydumlo'
+            }).catch((error)=>{console.log(error)})
+          }
 
         const optimizeUrl = cloudinary.url(uploadResult.public_id, {
             fetch_format: 'auto',
@@ -50,7 +56,7 @@ router.get('/file/upload', (req, res) => {
     res.render('add-products')
 })
 
-router.get('/', async (req, res) => {
+router.get('/', requireLogin, async (req, res) => {
     const products = await productSchema.aggregate([
         {
             $sort: { createdAt: -1 }

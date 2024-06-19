@@ -6,7 +6,6 @@ const productsRoute = require('./src/Routes/products')
 const artistsRoute = require('./src/Routes/artists')
 const registrationRoute = require('./src/Routes/registration')
 const loginRoute = require('./src/Routes/login')
-const setUserStatus = require('./src/middleware/userStatus')
 var cookieParser = require('cookie-parser')
 
 app.use(cookieParser())
@@ -21,7 +20,6 @@ app.use('/events', productsRoute)
 app.use('/artists', artistsRoute)
 app.use('/registration', registrationRoute)
 app.use('/login', loginRoute)
-app.use(setUserStatus)
 
 
 mongoose.connect('mongodb://127.0.0.1:27017/aws')

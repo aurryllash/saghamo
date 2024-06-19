@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router()
 const cloudinary = require('cloudinary').v2
 const artistsSchema = require('../Modules/artists')
+const { requirePermits } = require('../middleware/RoleSecurity')
 
 router.post('/upload', async (req, res) => {
     try {
@@ -53,7 +54,7 @@ router.post('/upload', async (req, res) => {
     }
 })
 
-router.get('/', async (req, res) => {
+router.get('/', requirePermits('delete_product'), async (req, res) => {
     try {
         const artists = await artistsSchema.aggregate([ {
             $sort: { createdAt: 1 }
