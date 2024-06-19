@@ -19,6 +19,15 @@ const usersSchema = new mongoose.Schema({
         type: String,
         required: true
     }
+    }, {
+        collection: 'users',
+        timestamps: true,
+        read: 'nearest',
+        writeConcern: {
+            w: 'majority',
+            j: true,
+            wtimeoutMS: 30000
+        }
 })
 
 function userValidate(user) {

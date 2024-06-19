@@ -2,14 +2,15 @@ const express = require('express');
 const router = express.Router()
 const bcrypt = require('bcrypt')
 const { User, UserValidate } = require('../Modules/users')
+const { userNotLoggedIn } = require('../middleware/RoleSecurity')
 
-router.get('/', (req, res) => {
+router.get('/', userNotLoggedIn, (req, res) => {
 
     res.render('registration')
-    
+
 })
 
-router.post('/', async (req, res) => {
+router.post('/', userNotLoggedIn, async (req, res) => {
     const { error } = UserValidate(req.body);
     if (error) {
       return res.status(400).json({ errors: error.details.map(detail => detail.message) });

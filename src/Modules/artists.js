@@ -34,6 +34,15 @@ const artistSchema = new mongoose.Schema({
         type: String,
         required: true
     }
-}, { timestamps: true })
+}, {
+    collection: 'artists',
+    timestamps: true,
+    read: 'nearest',
+    writeConcern: {
+        w: 'majority',
+        j: true,
+        wtimeoutMS: 30000
+    }
+})
 
 module.exports = mongoose.model('Artist', artistSchema)

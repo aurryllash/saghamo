@@ -4,7 +4,7 @@ const cloudinary = require('cloudinary').v2
 const productSchema = require('../Modules/products')
 const { requirePermits, requireLogin } = require('../middleware/RoleSecurity')
 
-router.post('/upload', async (req, res) => {
+router.post('/upload', requirePermits('add_product'), async (req, res) => {
     try {
 
         if (!req.files || Object.keys(req.files).length === 0) {
@@ -52,7 +52,7 @@ router.post('/upload', async (req, res) => {
 
 })
 
-router.get('/file/upload', (req, res) => {
+router.get('/file/upload', requirePermits('add_product'), (req, res) => {
     res.render('add-products')
 })
 
@@ -65,7 +65,7 @@ router.get('/', requireLogin, async (req, res) => {
     res.render('event', { products })
 })
 
-router.delete('/file/:id', async (req, res) => {
+router.delete('/file/:id', requirePermits('delete_product'), async (req, res) => {
     try {
     
         const products = await productSchema.findById(req.params.id)
@@ -86,6 +86,7 @@ router.delete('/file/:id', async (req, res) => {
         console.log('something went wrong')
         res.status(404).send('Something went wrong')
     }
+    
 })
 
 module.exports = router
