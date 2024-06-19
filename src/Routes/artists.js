@@ -5,7 +5,7 @@ const cloudinary = require('cloudinary').v2
 const artistsSchema = require('../Modules/artists')
 const { requirePermits } = require('../middleware/RoleSecurity')
 
-router.post('/upload', async (req, res) => {
+router.post('/upload', requirePermits('add_product'), async (req, res) => {
     try {
         
     cloudinary.config({ 
@@ -54,7 +54,7 @@ router.post('/upload', async (req, res) => {
     }
 })
 
-router.get('/', requirePermits('delete_product'), async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const artists = await artistsSchema.aggregate([ {
             $sort: { createdAt: 1 }
@@ -73,7 +73,7 @@ router.get('/', requirePermits('delete_product'), async (req, res) => {
     
 })
 
-router.get('/upload', (req, res) => {
+router.get('/upload', requirePermits('add_product'), (req, res) => {
     res.render('add-artists')
 })
 

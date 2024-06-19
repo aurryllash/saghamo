@@ -10,6 +10,8 @@ router.post('/upload', requirePermits('add_product'), async (req, res) => {
         if (!req.files || Object.keys(req.files).length === 0) {
             return res.status(400).send('No files were uploaded.');
             }
+            
+        res.status(202).json({ message: 'File upload request received. Processing in progress.' });
 
         cloudinary.config({ 
             cloud_name: "delmc0t3t", 
@@ -17,33 +19,41 @@ router.post('/upload', requirePermits('add_product'), async (req, res) => {
             api_secret: "S4G2TioPP9ZoqJIaujPRas8h6qw"
         });
             
-        const uploadResult = await cloudinary.uploader.upload(req.files.image.tempFilePath, {
-            asset_folder: 'saydumlo'
-        }).catch((error)=>{console.log(error)});
+        // const uploadResult = await cloudinary.uploader.upload(req.files.image.tempFilePath, {
+        //     asset_folder: 'saydumlo'
+        // }).catch((error)=>{console.log(error)});
 
-        for (const [key, file] of Object.entries(req.files)) {
-            let uploadSecondGradeImages = await cloudinary.uploader.upload(file.tempFilePath, {
-                asset_folder: 'saydumlo'
-            }).catch((error)=>{console.log(error)})
-          }
+        const imagesArray = Object.values(req.files).map(async file => {
+            const uploadResult = await cloudinary.uploader.upload(file.tempFilePath, {
+                        asset_folder: 'saydumlo'
+                    }).catch((error)=>{console.log(error)})
+            
+            const optimizeUrl = cloudinary.url(uploadResult.public_id, {
+                fetch_format: 'auto',
+                quality: 'auto'
+            });
+    
+            const autoCropUrl = cloudinary.url(uploadResult.public_id, {
+                crop: 'auto',
+                gravity: 'auto',
+                width: 500,
+                height: 500,
+            });
+            const obj = {
+                public_id: uploadResult.public_id,
+                url: uploadResult.url
+            }
+            return obj
+        })
 
-        const optimizeUrl = cloudinary.url(uploadResult.public_id, {
-            fetch_format: 'auto',
-            quality: 'auto'
-        });
+        const images = await Promise.all(imagesArray)
 
-        const autoCropUrl = cloudinary.url(uploadResult.public_id, {
-            crop: 'auto',
-            gravity: 'auto',
-            width: 500,
-            height: 500,
-        });
+
                 
-        req.body.public_id = uploadResult.public_id
-        req.body.url = uploadResult.url
+        req.body.images = images;
         await new productSchema(req.body).save();
 
-        return res.status(200).json('Uplouded Successfully')
+        // return res.status(200).json('Uplouded Successfully')
 
     } catch(error) {
         console.error('Error uploading file:', error);
@@ -56,7 +66,7 @@ router.get('/file/upload', requirePermits('add_product'), (req, res) => {
     res.render('add-products')
 })
 
-router.get('/', requireLogin, async (req, res) => {
+router.get('/', async (req, res) => {
     const products = await productSchema.aggregate([
         {
             $sort: { createdAt: -1 }
@@ -86,7 +96,7 @@ router.delete('/file/:id', requirePermits('delete_product'), async (req, res) =>
         console.log('something went wrong')
         res.status(404).send('Something went wrong')
     }
-    
+
 })
 
 module.exports = router

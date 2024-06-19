@@ -74,7 +74,7 @@ nav .page-link:hover {
       <li>
           <div class="card" style="width: 18rem; height: 500px;" >
             <div class="img_container" style="height: 60%;">
-                <a href="/products/api/<%= item._id %>"><img src="<%= item.url %>" class="card-img-top" alt="Product Image"></a>
+                <a href="/products/api/<%= item._id %>"><img src="<%= item.images[0].url %>" class="card-img-top" alt="Product Image"></a>
             </div>
             <div class="card-body">
               <h5 class="card-title"><%= item.title %></h5>
