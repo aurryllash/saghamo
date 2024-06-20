@@ -16,6 +16,10 @@ router.post('/', userNotLoggedIn, async (req, res) => {
       return res.status(400).json({ errors: error.details.map(detail => detail.message) });
     }
     try {
+        const checkUser = await User.findOne( { email: req.body.email } )
+        if(checkUser) {
+            return res.status(409).json('User already exist')
+        }
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
         const user = new User({
@@ -24,7 +28,7 @@ router.post('/', userNotLoggedIn, async (req, res) => {
             password: hashedPassword
         })
         await user.save();
-        res.status(200).send('User Registered Successfully.')
+        return res.redirect('/login')
     } catch(error) {
         console.log(error)
         res.status(400).json('Something Went Wrong.')

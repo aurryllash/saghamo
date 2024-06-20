@@ -16,7 +16,7 @@ app.use(express.json())
 app.use(fileUpload({ useTempFiles: true,tempFileDir: '/tmp/' }));
 
 
-app.use('/events', productsRoute)
+app.use('/clothes', productsRoute)
 app.use('/artists', artistsRoute)
 app.use('/registration', registrationRoute)
 app.use('/login', loginRoute)

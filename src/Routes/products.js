@@ -68,7 +68,7 @@ router.get('/', async (req, res) => {
             $sort: { createdAt: -1 }
         }
     ])
-    res.render('event', { products })
+    res.render('products', { products })
 })
 
 router.delete('/file/:id', requirePermits('delete_product'), async (req, res) => {
