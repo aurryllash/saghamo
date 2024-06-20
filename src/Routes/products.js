@@ -4,6 +4,10 @@ const cloudinary = require('cloudinary').v2
 const productSchema = require('../Modules/products')
 const { requirePermits, requireLogin } = require('../middleware/RoleSecurity')
 
+const CLOUD_NAME= process.env.CLOUD_NAME;
+const API_KEY=process.env.API_KEY 
+const API_SECRET=process.env.API_SECRET
+
 router.post('/upload', requirePermits('add_product'), async (req, res) => {
     try {
 
@@ -14,9 +18,9 @@ router.post('/upload', requirePermits('add_product'), async (req, res) => {
         res.status(202).json({ message: 'File upload request received. Processing in progress.' });
 
         cloudinary.config({ 
-            cloud_name: "delmc0t3t", 
-            api_key: "724299298349376", 
-            api_secret: "S4G2TioPP9ZoqJIaujPRas8h6qw"
+            cloud_name: CLOUD_NAME, 
+            api_key: API_KEY, 
+            api_secret: API_SECRET
         });
 
         const imagesArray = Object.values(req.files).map(async file => {
@@ -63,12 +67,17 @@ router.get('/file/upload', requirePermits('add_product'), (req, res) => {
 })
 
 router.get('/', async (req, res) => {
-    const products = await productSchema.aggregate([
-        {
-            $sort: { createdAt: -1 }
-        }
-    ])
-    res.render('products', { products })
+    try {
+        const products = await productSchema.aggregate([
+            {
+                $sort: { createdAt: -1 }
+            }
+        ])
+        res.render('products', { products })
+    } catch(error) {
+        console.log('Error: ' + error)
+        res.status(404).send('Something went wrong')
+    }
 })
 
 router.delete('/file/:id', requirePermits('delete_product'), async (req, res) => {
@@ -79,9 +88,9 @@ router.delete('/file/:id', requirePermits('delete_product'), async (req, res) =>
             return res.status(400).send('No files were find.')
         }
         cloudinary.config({ 
-            cloud_name: "delmc0t3t", 
-            api_key: "724299298349376", 
-            api_secret: "S4G2TioPP9ZoqJIaujPRas8h6qw"
+            cloud_name: CLOUD_NAME, 
+            api_key: API_KEY, 
+            api_secret: API_SECRET
         });
 
         const productsArray = Object.values(products.images).map(async file => {
@@ -95,10 +104,24 @@ router.delete('/file/:id', requirePermits('delete_product'), async (req, res) =>
 
         return res.status(200).send("Deleted succesfully")
     } catch(error) {
-        console.log('something went wrong')
+        console.log('Error: ' + error)
         res.status(404).send('Something went wrong')
     }
 
+})
+
+router.get('/api/:id', async (req, res) => {
+    try {
+
+        const product = await productSchema.findOne({ _id: req.params.id })
+    
+        res.render('product', { product })
+
+    } catch(error) {
+        console.log('Error: ' + error)
+        res.status(404).send('Something went wrong')
+    }
+    
 })
 
 module.exports = router

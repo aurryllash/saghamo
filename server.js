@@ -2,11 +2,14 @@ const express = require('express')
 const app = express()
 const mongoose = require('mongoose')
 const fileUpload = require('express-fileupload');
+var cookieParser = require('cookie-parser')
+
 const productsRoute = require('./src/Routes/products')
 const artistsRoute = require('./src/Routes/artists')
 const registrationRoute = require('./src/Routes/registration')
 const loginRoute = require('./src/Routes/login')
-var cookieParser = require('cookie-parser')
+const userRoute = require('./src/Routes/user')
+
 
 app.use(cookieParser())
 app.use(express.urlencoded({ extended: true }))
@@ -20,6 +23,7 @@ app.use('/clothes', productsRoute)
 app.use('/artists', artistsRoute)
 app.use('/registration', registrationRoute)
 app.use('/login', loginRoute)
+app.use('/user', userRoute)
 
 
 mongoose.connect('mongodb://127.0.0.1:27017/aws')

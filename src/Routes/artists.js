@@ -5,13 +5,17 @@ const cloudinary = require('cloudinary').v2
 const artistsSchema = require('../Modules/artists')
 const { requirePermits } = require('../middleware/RoleSecurity')
 
+const CLOUD_NAME= process.env.CLOUD_NAME;
+const API_KEY=process.env.API_KEY 
+const API_SECRET=process.env.API_SECRET
+
 router.post('/upload', requirePermits('add_product'), async (req, res) => {
     try {
         
-    cloudinary.config({ 
-            cloud_name: "delmc0t3t", 
-            api_key: "724299298349376", 
-            api_secret: "S4G2TioPP9ZoqJIaujPRas8h6qw"
+        cloudinary.config({ 
+            cloud_name: CLOUD_NAME, 
+            api_key: API_KEY, 
+            api_secret: API_SECRET
         });
             
         const uploadResult = await cloudinary.uploader.upload(req.files.image.tempFilePath, {
