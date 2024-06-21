@@ -25,7 +25,7 @@ router.post('/', userNotLoggedIn, async (req, res) => {
             return res.status(401).json('email or password is wrong.')
         }
 
-        const token = jwt.sign({ userId: user._id, userRole: user.role }, SECRET);
+        const token = jwt.sign({ userId: user._id, userRole: user.role }, SECRET, { expiresIn: jwtExpireSeconds });
         res.cookie(
             "token", token, {
             httpOnly: true,

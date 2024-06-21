@@ -3,10 +3,13 @@ const router = express.Router()
 const cloudinary = require('cloudinary').v2
 const productSchema = require('../Modules/products')
 const { requirePermits, requireLogin } = require('../middleware/RoleSecurity')
+const Redis = require('ioredis')
 
 const CLOUD_NAME= process.env.CLOUD_NAME;
 const API_KEY=process.env.API_KEY 
 const API_SECRET=process.env.API_SECRET
+const REDIS_URL=process.env.REDIS_URL
+const REDIS_TOKEN=process.env.REDIS_TOKEN
 
 router.post('/upload', requirePermits('add_product'), async (req, res) => {
     try {
@@ -65,14 +68,29 @@ router.post('/upload', requirePermits('add_product'), async (req, res) => {
 router.get('/file/upload', requirePermits('add_product'), (req, res) => {
     res.render('add-products')
 })
+const getRedisUrl = () => {
+    if(REDIS_URL) {
+        return REDIS_URL
+    }
+    throw new Error('Redis Url is not definde.') 
+} 
+const redis = new Redis(getRedisUrl())
 
 router.get('/', async (req, res) => {
     try {
+        const redisProduct = await redis.get('products')
+        if(redisProduct) {
+            console.log("returned from redis")
+            const products = JSON.parse(redisProduct)
+            return res.render('products', { products })
+        }
         const products = await productSchema.aggregate([
             {
                 $sort: { createdAt: -1 }
             }
         ])
+        redis.set('products', JSON.stringify(products))
+        console.log('quaried from database and set to the redis')
         res.render('products', { products })
     } catch(error) {
         console.log('Error: ' + error)
