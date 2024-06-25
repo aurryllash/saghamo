@@ -5,11 +5,15 @@ const productSchema = require('../Modules/products')
 const { requirePermits, requireLogin } = require('../middleware/RoleSecurity')
 const Redis = require('ioredis')
 
+
+
 const CLOUD_NAME= process.env.CLOUD_NAME;
 const API_KEY=process.env.API_KEY 
 const API_SECRET=process.env.API_SECRET
 const REDIS_URL=process.env.REDIS_URL
 const REDIS_TOKEN=process.env.REDIS_TOKEN
+
+const redis = new Redis(REDIS_URL);
 
 router.post('/upload', requirePermits('add_product'), async (req, res) => {
     try {
@@ -79,7 +83,7 @@ router.get('/file/upload', requirePermits('add_product'), (req, res) => {
     res.render('add-products')
 })
 
-const redis = new Redis('rediss://default:AbZhAAIncDFkMTI4NTEzYzBiZjI0NjBhOTQzZGE4ZDI5ODc4NGEyOHAxNDY2ODk@champion-tadpole-46689.upstash.io:6379');
+
 
 router.get('/', async (req, res) => {
     try {
@@ -108,7 +112,7 @@ router.get('/', async (req, res) => {
 router.delete('/file/:id', requirePermits('delete_product'), async (req, res) => {
     try {
     
-        const products = await productSchema.findById(req.params.id)
+        const products = await productSchema.findByIdAndDelete(req.params.id)
         if(!products) {
             return res.status(400).send('No files were find.')
         }
@@ -130,10 +134,6 @@ router.delete('/file/:id', requirePermits('delete_product'), async (req, res) =>
             const deletedFile = await cloudinary.uploader.destroy(file.public_id)
         })
         const destroyedImages = await Promise.all(productsArray)
-
-        if(destroyedImages) {
-            const deleteFromDB = await productSchema.findByIdAndDelete(req.params.id)
-        }
 
         return res.status(200).send("Deleted succesfully")
     } catch(error) {

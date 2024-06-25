@@ -4,6 +4,7 @@ const router = express.Router()
 const cloudinary = require('cloudinary').v2
 const artistsSchema = require('../Modules/artists')
 const { requirePermits } = require('../middleware/RoleSecurity')
+const { ObjectId } = require('mongodb');
 
 const CLOUD_NAME= process.env.CLOUD_NAME;
 const API_KEY=process.env.API_KEY 
@@ -26,7 +27,6 @@ router.post('/upload', requirePermits('add_product'), async (req, res) => {
             fetch_format: 'auto',
             quality: 'auto'
         });
-        
         
         const autoCropUrl = cloudinary.url(uploadResult.public_id, {
             crop: 'auto',
@@ -94,6 +94,26 @@ router.get('/api/:name', async (req, res) => {
         console.error(error);
         res.status(500).send('Server error');
     }
+})
+router.delete('/file/:id', requirePermits('delete_product'), async (req, res) => {
+    try {
+        const deleteFromDB = await artistsSchema.findByIdAndDelete(req.params.id)
+        if(!deleteFromDB) {
+            return res.status(404).json('No files were found')
+        }
+        cloudinary.config({ 
+            cloud_name: CLOUD_NAME, 
+            api_key: API_KEY, 
+            api_secret: API_SECRET
+        });
+        const deletedImage = cloudinary.uploader.destroy(deleteFromDB.public_id)
+        
+        return res.status(200).send("Deleted succesfully")
+
+    } catch(error) {
+
+    }
+    
 })
 
 module.exports = router
