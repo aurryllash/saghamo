@@ -43,7 +43,7 @@
             <td><%= user.email %></td>
             <td><%= user.role %></td>
             <% if(user.email != 'lashatsiklauri@gmail.com') { %>
-            <td><div class="change-role-button" style="background-color: rgb(56, 56, 56); max-width: 150px;"><button class="change-role-button" data-id="<%= user._id %>">Give <%= user.role === 'admin' ? 'user' : 'admin' %></button></div></td>
+            <td><div class="change-role-button" style="background-color: rgb(56, 56, 56); max-width: 150px;"><button id="role-button" class="change-role-button role-button" data-id="<%= user._id %>">Give <%= user.role === 'meneger' ? 'user' : 'meneger' %></button></div></td>
             <td><button class="delete-button" data-id="<%= user._id %>">Delete</button></td>
             <% } %>
           </tr>
@@ -60,7 +60,6 @@
     deleteButtons.forEach(button => {
         const id = button.dataset.id
         button.addEventListener('click', () => {
-            console.log(id)
             fetch(`/users/delete/${id}`, {
                 method: 'DELETE'
             })
@@ -69,6 +68,23 @@
                 window.location.reload()
             })
             .catch(err => console.log(err))
+        })
+    })
+
+    const changeButtons = document.querySelectorAll('.role-button')
+
+    changeButtons.forEach(button => {
+        const id = button.dataset.id
+
+        button.addEventListener('click', () => {
+            fetch(`/users/role/${id}`, {
+                method: 'put'
+            })
+            .then(res => res.json())
+            .then(res => {
+                window.location.reload()
+            })
+            .catch(error => console.log(error))
         })
     })
 

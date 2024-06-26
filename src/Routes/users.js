@@ -3,7 +3,6 @@ const express = require('express');
 const router = express.Router()
 const { User } = require('../Modules/users');
 const { requirePermits } = require('../middleware/RoleSecurity');
-const { findByIdAndDelete } = require('../Modules/products');
 
 router.get('/', requirePermits('see_users'), (req, res) => {
     User.find()
@@ -15,8 +14,7 @@ router.get('/', requirePermits('see_users'), (req, res) => {
             res.status(500).send('Server Error');
         });
 })
-router.delete('/delete/:id', async (req, res) => {
-    console.log(req.params.id)
+router.delete('/delete/:id', requirePermits('delete_user'), async (req, res) => {
     try {
         const user = await User.findByIdAndDelete(req.params.id);
         if(user) {
@@ -27,5 +25,25 @@ router.delete('/delete/:id', async (req, res) => {
         res.status(500).send('Server Error');
     }
 })
+
+router.put('/role/:id', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id)
+        if(!user) {
+            return res.status(404).json('User Not Found')
+        }
+
+        userRole = user.role === 'meneger' ? 'user' : 'meneger'
+
+        user.role = userRole
+        user.save()
+
+        return res.status(200).json('Change role successfully')
+
+    } catch(error) {
+        console.log('Error: ' + error)
+        return res.status(500).send('Something Went Wrong')
+    }
+}) 
 
 module.exports = router

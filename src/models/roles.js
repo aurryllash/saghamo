@@ -4,7 +4,8 @@ const roles = {
         'delete_product',
         'update_product',
         'read_product',
-        'see_users'
+        'see_users',
+        'delete_user'
     ],
     meneger: [
         'add_product',
