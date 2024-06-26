@@ -5,7 +5,6 @@ const fileUpload = require('express-fileupload');
 var cookieParser = require('cookie-parser')
 
 const productsRoute = require('./src/Routes/products')
-const artistsRoute = require('./src/Routes/artists')
 const registrationRoute = require('./src/Routes/registration')
 const loginRoute = require('./src/Routes/login')
 const userRoute = require('./src/Routes/user')
@@ -21,7 +20,6 @@ app.use(fileUpload({ useTempFiles: true,tempFileDir: '/tmp/' }));
 
 
 app.use('/clothes', productsRoute)
-app.use('/artists', artistsRoute)
 app.use('/registration', registrationRoute)
 app.use('/login', loginRoute)
 app.use('/user', userRoute)

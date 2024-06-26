@@ -26,7 +26,7 @@ router.delete('/delete/:id', requirePermits('delete_user'), async (req, res) => 
     }
 })
 
-router.put('/role/:id', async (req, res) => {
+router.put('/role/:id', requirePermits('change_user_role'), async (req, res) => {
     try {
         const user = await User.findById(req.params.id)
         if(!user) {
