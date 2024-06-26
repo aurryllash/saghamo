@@ -9,6 +9,7 @@ const artistsRoute = require('./src/Routes/artists')
 const registrationRoute = require('./src/Routes/registration')
 const loginRoute = require('./src/Routes/login')
 const userRoute = require('./src/Routes/user')
+const usersRoute = require('./src/Routes/users')
 
 
 app.use(cookieParser())
@@ -24,6 +25,7 @@ app.use('/artists', artistsRoute)
 app.use('/registration', registrationRoute)
 app.use('/login', loginRoute)
 app.use('/user', userRoute)
+app.use('/users', usersRoute)
 
 
 mongoose.connect('mongodb://127.0.0.1:27017/aws')

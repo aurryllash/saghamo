@@ -11,7 +11,9 @@ router.get('/', userNotLoggedIn, (req, res) => {
 })
 
 router.post('/', userNotLoggedIn, async (req, res) => {
+
     const { error } = UserValidate(req.body);
+    
     if (error) {
       return res.status(400).json({ errors: error.details.map(detail => detail.message) });
     }

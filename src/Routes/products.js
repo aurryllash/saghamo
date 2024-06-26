@@ -116,14 +116,10 @@ router.delete('/file/:id', requirePermits('delete_product'), async (req, res) =>
         if(!products) {
             return res.status(400).send('No files were find.')
         }
-        (async () => {
-            try {
-              await redis.del('products');
-              console.log('Key deleted successfully');
-            } catch (err) {
-              console.error('Error deleting key:', err);
-            }
-          })();
+        
+        await redis.del('products');
+        console.log('Key deleted successfully');
+
         cloudinary.config({ 
             cloud_name: CLOUD_NAME, 
             api_key: API_KEY, 

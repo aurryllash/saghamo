@@ -1,0 +1,57 @@
+<%- include('./partials/header')%>
+<style>
+  .delete-button {
+    border: 0;
+    padding: 2px 15px;
+    background-color: rgb(56, 56, 56);
+    transition: all 0.3s;
+    color: white;
+  }
+  .delete-button:hover {
+    background-color: rgb(62, 62, 62);
+  }
+  .change-role-button {
+    border: 0;
+    padding: 2px 15px;
+    background-color: rgb(56, 56, 56);
+    transition: all 0.3s;
+    color: white;
+    cursor: pointer;
+  }
+  .change-role-button:hover {
+    background-color: rgb(62, 62, 62);
+  }
+</style>
+<section class="container" style="min-height: 100vh;">
+  <div class="table-responsive-sm">
+    <table class="table">
+        <thead>
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Name</th>
+            <th scope="col">Email</th>
+            <th scope="col">Role</th>
+            <th scope="col">Change Role</th>
+            <th scope="col">Delete User</th>
+          </tr>
+        </thead>
+        <tbody>
+            <% users.forEach((user, index) => { %>    
+          <tr>
+            <th scope="row">1</th>
+            <td><%= user.name %></td>
+            <td><%= user.email %></td>
+            <td><%= user.role %></td>
+            <% if(user.email != 'lashatsiklauri@gmail.com') { %>
+            <td><div class="change-role-button" style="background-color: rgb(56, 56, 56); max-width: 150px;"><button class="change-role-button" data-id="<%= user._id %>">Give <%= user.role === 'admin' ? 'user' : 'admin' %></button></div></td>
+            <td><button class="delete-button" data-id="<%= user._id %>">Delete</button></td>
+            <% } %>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+</section>
+
+
+</body>

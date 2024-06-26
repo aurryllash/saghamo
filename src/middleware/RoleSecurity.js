@@ -33,7 +33,6 @@ const userNotLoggedIn = (req, res, next) => {
 
 function requirePermits() {
 
-    
     const permits = []
 
     if (arguments.length === 0) {
