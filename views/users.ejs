@@ -52,6 +52,24 @@
       </table>
     </div>
 </section>
-
-
 </body>
+
+<script>
+    const deleteButtons = document.querySelectorAll('.delete-button')
+
+    deleteButtons.forEach(button => {
+        const id = button.dataset.id
+        button.addEventListener('click', () => {
+            console.log(id)
+            fetch(`/users/delete/${id}`, {
+                method: 'DELETE'
+            })
+            .then(res => res.json())
+            .then(res => {
+                window.location.reload()
+            })
+            .catch(err => console.log(err))
+        })
+    })
+
+</script>
