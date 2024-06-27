@@ -82,21 +82,24 @@ const get_all_products = async (req, res) => {
         // const redisProduct = await redis.get('products');
         // if(redisProduct) {
         //     console.log("returned from redis")
+        //     let limit = 4;
+        //     const totalProducts = countResult.length > 0 ? countResult[0].totalProducts : 0;
+        //     const totalPages = Math.ceil(totalProducts / limit);
+        //     const currentPage = +req.query.page
+    
+        //     const page = (currentPage-1)*limit
         //     const products = JSON.parse(redisProduct)
-        //     return res.render('products', { products })
+
+        //     return res.render('products', { products, totalProducts, totalPages, currentPage  })
         // }
 
-        const countResult = await productSchema.aggregate([
-            {
-              $count: "totalProducts"
-            }
-          ]);
+        const countResult = await productSchema.countDocuments();
         let limit = 4;
-        const totalProducts = countResult.length > 0 ? countResult[0].totalProducts : 0;
+        const totalProducts = countResult > 0 ? countResult : 0;
         const totalPages = Math.ceil(totalProducts / limit);
         const currentPage = +req.query.page
 
-        const page = (currentPage-1)*4
+        const page = (currentPage-1)*limit
         console.log('page: ' + page)
         const products = await productSchema.aggregate([
             {
@@ -110,7 +113,6 @@ const get_all_products = async (req, res) => {
             }
         ])
         
-
         // await redis.set('products', JSON.stringify(products), 'EX', 300)
         console.log('quaried from database and set to the redis')
         return res.render('products', { products, totalProducts, totalPages, currentPage })
