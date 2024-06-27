@@ -78,9 +78,10 @@ const post_add_file = async (req, res) => {
 const get_all_products = async (req, res) => {
     try {
 
+        var sort = req.query.sort || 'default' 
+        const currentSort = sort
         const currentPage = +req.query.page || 1
-        const url = req.url
-        const cachKey = `clothes:page:${currentPage}`
+        const cachKey = `clothes:page:${currentPage}:sort:${currentSort}`
 
         const countResult = await productSchema.countDocuments();
         let limit = 4;
@@ -93,15 +94,26 @@ const get_all_products = async (req, res) => {
             console.log("returned from redis")
             const products = JSON.parse(redisProduct)
 
-            return res.render('products', { products, totalProducts, totalPages, currentPage  })
+            return res.render('products', { products, totalProducts, totalPages, currentPage, currentSort  })
         }
-
-
+        
+        var sortStage = { }
+        if(currentSort === 'az') {
+            sortStage = { 'title': 1 }
+        } else if(currentSort === 'za') {
+            sortStage = { 'title': -1 }
+        } else if(currentSort === 'Time: newly listed') {
+            sortStage = { createdAt: -1 }
+        } else if(currentSort === 'Time: ending soonest') {
+            sortStage = { createdAt: 1 }
+        } else {
+            sortStage = { createdAt: -1 }
+        }
 
         const page = (currentPage-1)*limit
         const products = await productSchema.aggregate([
             {
-                $sort: { createdAt: -1 }
+                $sort: sortStage
             },
             {
                 $skip: page
@@ -111,9 +123,9 @@ const get_all_products = async (req, res) => {
             }
         ])
         
-        await redis.set(cachKey, JSON.stringify(products), 'EX', 30)
+        await redis.set(cachKey, JSON.stringify(products), 'EX', 15)
         console.log('quaried from database and set to the redis')
-        return res.render('products', { products, totalProducts, totalPages, currentPage })
+        return res.render('products', { products, totalProducts, totalPages, currentPage, currentSort })
     } catch(error) {
         console.log('Error: ' + error)
         res.status(404).send('Something went wrong')
