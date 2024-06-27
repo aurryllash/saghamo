@@ -46,6 +46,12 @@ app.get('/logout', (req, res) => {
     res.clearCookie('token')
     res.redirect('/home')
 })
+app.get('/404', (req, res) => {
+    res.render('404')
+}) 
+app.use((req, res, next) => {
+    res.status(404).redirect('/404');
+})
 
 
 
