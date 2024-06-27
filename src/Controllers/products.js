@@ -78,21 +78,42 @@ const post_add_file = async (req, res) => {
 }
 const get_all_products = async (req, res) => {
     try {
+        
+        // const redisProduct = await redis.get('products');
+        // if(redisProduct) {
+        //     console.log("returned from redis")
+        //     const products = JSON.parse(redisProduct)
+        //     return res.render('products', { products })
+        // }
 
-        const redisProduct = await redis.get('products');
-        if(redisProduct) {
-            console.log("returned from redis")
-            const products = JSON.parse(redisProduct)
-            return res.render('products', { products })
-        }
+        const countResult = await productSchema.aggregate([
+            {
+              $count: "totalProducts"
+            }
+          ]);
+        let limit = 4;
+        const totalProducts = countResult.length > 0 ? countResult[0].totalProducts : 0;
+        const totalPages = Math.ceil(totalProducts / limit);
+        const currentPage = +req.query.page
+
+        const page = (currentPage-1)*4
+        console.log('page: ' + page)
         const products = await productSchema.aggregate([
             {
                 $sort: { createdAt: -1 }
+            },
+            {
+                $skip: page
+            },
+            { 
+                $limit: limit
             }
         ])
-        await redis.set('products', JSON.stringify(products), 'EX', 300)
+        
+
+        // await redis.set('products', JSON.stringify(products), 'EX', 300)
         console.log('quaried from database and set to the redis')
-        return res.render('products', { products })
+        return res.render('products', { products, totalProducts, totalPages, currentPage })
     } catch(error) {
         console.log('Error: ' + error)
         res.status(404).send('Something went wrong')
