@@ -81,20 +81,25 @@ const get_all_products = async (req, res) => {
         var sort = req.query.sort || 'default' 
         const currentSort = sort
         const currentPage = +req.query.page || 1
-        const cachKey = `clothes:page:${currentPage}:sort:${currentSort}`
+        var search = req.query.search
+        const cachKey = `clothes?page:${currentPage}&sort:${currentSort}`
+        const limit = 4;
 
-        const countResult = await productSchema.countDocuments();
-        let limit = 4;
-        const totalProducts = countResult > 0 ? countResult : 0;
-        const totalPages = Math.ceil(totalProducts / limit);
+        if(!search) {
+            var countResult = await productSchema.countDocuments();
+
+            var totalProducts = countResult > 0 ? countResult : 0;
+            var totalPages = Math.ceil(totalProducts / limit);
+        }
+
         
         const redisProduct = await redis.get(cachKey);
-        if(redisProduct) {
+        if(redisProduct && !search) {
 
             console.log("returned from redis")
             const products = JSON.parse(redisProduct)
 
-            return res.render('products', { products, totalProducts, totalPages, currentPage, currentSort  })
+            return res.render('products', { products, totalPages, currentPage, currentSort, search })
         }
         
         var sortStage = { }
@@ -110,8 +115,31 @@ const get_all_products = async (req, res) => {
             sortStage = { createdAt: -1 }
         }
 
+        let seacrhStage = {}
+        if(search) {
+        seacrhStage = {
+            'title': {
+                $regex: search,
+                $options: 'i'
+        }} 
+        var countResult = await productSchema.aggregate([
+            {
+                $match: seacrhStage
+            },
+            {
+                $count: 'totalProducts'
+            }
+        ])
+        var totalProducts = countResult[0].totalProducts > 0 ? countResult[0].totalProducts : 0;
+        var totalPages = Math.ceil(totalProducts / limit);
+        }
+
+
         const page = (currentPage-1)*limit
         const products = await productSchema.aggregate([
+            {
+                $match: seacrhStage
+            },
             {
                 $sort: sortStage
             },
@@ -122,10 +150,15 @@ const get_all_products = async (req, res) => {
                 $limit: limit
             }
         ])
-        
-        await redis.set(cachKey, JSON.stringify(products), 'EX', 15)
-        console.log('quaried from database and set to the redis')
-        return res.render('products', { products, totalProducts, totalPages, currentPage, currentSort })
+
+        if(!search) {
+            await redis.set(cachKey, JSON.stringify(products), 'EX', 30)
+            console.log('quaried from database and set to the redis')
+        } else {
+            console.log('quaried from database')
+        }
+
+        return res.render('products', { products, totalPages, currentPage, currentSort, search })
     } catch(error) {
         console.log('Error: ' + error)
         res.status(404).send('Something went wrong')

@@ -67,6 +67,9 @@
             <li class="nav-item mx-2">
               <a class="nav-link" href="/users">Users</a>
             </li>
+            <li class="nav-item mx-6">
+              <input type="text" style="color: black;" class="header-search-input" id="searchedInput" placeholder="search...">
+            </li>
             <li class="nav-item mx-2">
               <a class="nav-link" href="/registration">Registration</a>
             </li>
@@ -84,3 +87,15 @@
       </div>
     </div>
 </nav>
+
+<script>
+  const searchedInput = document.getElementById('searchedInput');
+
+  searchedInput.addEventListener('keypress', () => {
+    
+    if(event.key === 'Enter') {
+      const searchedUrl = '/clothes?search=' +  searchedInput.value;
+      window.location.href = searchedUrl
+    }
+  })
+</script>
