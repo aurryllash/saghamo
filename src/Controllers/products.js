@@ -1,6 +1,5 @@
 const cloudinary = require('cloudinary').v2
 const productSchema = require('../Modules/products')
-
 const Redis = require('ioredis')
 
 const CLOUD_NAME= process.env.CLOUD_NAME;
@@ -78,29 +77,28 @@ const post_add_file = async (req, res) => {
 }
 const get_all_products = async (req, res) => {
     try {
-        
-        // const redisProduct = await redis.get('products');
-        // if(redisProduct) {
-        //     console.log("returned from redis")
-        //     let limit = 4;
-        //     const totalProducts = countResult.length > 0 ? countResult[0].totalProducts : 0;
-        //     const totalPages = Math.ceil(totalProducts / limit);
-        //     const currentPage = +req.query.page
-    
-        //     const page = (currentPage-1)*limit
-        //     const products = JSON.parse(redisProduct)
 
-        //     return res.render('products', { products, totalProducts, totalPages, currentPage  })
-        // }
+        const currentPage = +req.query.page || 1
+        const url = req.url
+        const cachKey = `clothes:page:${currentPage}`
 
         const countResult = await productSchema.countDocuments();
         let limit = 4;
         const totalProducts = countResult > 0 ? countResult : 0;
         const totalPages = Math.ceil(totalProducts / limit);
-        const currentPage = +req.query.page
+        
+        const redisProduct = await redis.get(cachKey);
+        if(redisProduct) {
+
+            console.log("returned from redis")
+            const products = JSON.parse(redisProduct)
+
+            return res.render('products', { products, totalProducts, totalPages, currentPage  })
+        }
+
+
 
         const page = (currentPage-1)*limit
-        console.log('page: ' + page)
         const products = await productSchema.aggregate([
             {
                 $sort: { createdAt: -1 }
@@ -113,7 +111,7 @@ const get_all_products = async (req, res) => {
             }
         ])
         
-        // await redis.set('products', JSON.stringify(products), 'EX', 300)
+        await redis.set(cachKey, JSON.stringify(products), 'EX', 30)
         console.log('quaried from database and set to the redis')
         return res.render('products', { products, totalProducts, totalPages, currentPage })
     } catch(error) {
