@@ -9,6 +9,15 @@ const productSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    price: {
+        type: Number,
+        required: true,
+    },
+    status: {
+        type: String,
+        enum: ['available', 'reserved', 'sold'],
+        default: 'available'
+    },
     images: [
         {
             public_id: {

@@ -1,7 +1,8 @@
 const mongoose = require('mongoose')
 const joi = require('joi')
+const { Schema } = mongoose;
 
-const usersSchema = new mongoose.Schema({
+const usersSchema = new Schema({
     username: {
         type: String,
         required: true
@@ -18,7 +19,13 @@ const usersSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true
-    }
+    },
+    purchasedProductsIds: [
+        {
+            type: Schema.Types.ObjectId,
+            ref: 'products'
+        }
+    ]
     }, {
         collection: 'users',
         timestamps: true,

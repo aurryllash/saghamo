@@ -1,3 +1,4 @@
+require('dotenv').config()
 const cloudinary = require('cloudinary').v2
 const productSchema = require('../Modules/products')
 const Redis = require('ioredis')
@@ -86,10 +87,11 @@ const get_all_products = async (req, res) => {
         const limit = 4;
 
         if(!search) {
-            var countResult = await productSchema.countDocuments();
 
+            var countResult = await productSchema.countDocuments();
             var totalProducts = countResult > 0 ? countResult : 0;
             var totalPages = Math.ceil(totalProducts / limit);
+
         }
 
         
@@ -102,7 +104,7 @@ const get_all_products = async (req, res) => {
             return res.render('products', { products, totalPages, currentPage, currentSort, search })
         }
         
-        var sortStage = { }
+        var sortStage = {}
         if(currentSort === 'az') {
             sortStage = { 'title': 1 }
         } else if(currentSort === 'za') {
@@ -166,13 +168,18 @@ const get_all_products = async (req, res) => {
 }
 const delete_product = async (req, res) => {
     try {
+        var sort = req.query.sort || 'default' 
+        const currentSort = sort
+        const currentPage = +req.query.page || 1
+        const cachKey = `clothes?page:${currentPage}&sort:${currentSort}`
     
         const products = await productSchema.findByIdAndDelete(req.params.id)
+        console.log(req.params.id)
         if(!products) {
             return res.status(400).send('No files were find.')
         }
         
-        await redis.del('products');
+        await redis.del(cachKey);
         console.log('Key deleted successfully');
 
         cloudinary.config({ 
@@ -186,7 +193,7 @@ const delete_product = async (req, res) => {
         })
         const destroyedImages = await Promise.all(productsArray)
 
-        return res.status(200).send("Deleted succesfully")
+        res.status(200).send("Deleted succesfully")
     } catch(error) {
         console.log('Error: ' + error)
         res.status(404).send('Something went wrong')

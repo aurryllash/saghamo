@@ -8,5 +8,8 @@ router.get('/file/upload', requirePermits('add_product'), get_file_upload)
 router.get('/', get_all_products)
 router.delete('/file/:id', requirePermits('delete_product'), delete_product)
 router.get('/api/:id', get_specific_product)
+router.put('/api/:id', async (req, res) => {
+    
+})
 
 module.exports = router

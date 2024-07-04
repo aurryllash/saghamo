@@ -33,6 +33,10 @@
     font-size: 1.5rem;
   }
 }
+
+.buttons {
+    margin-top: auto;
+}
 </style>
 
 <section class="container" style="min-height: 100vh; margin-top: 100px;">
@@ -52,8 +56,24 @@
             <div class="file_body">
                 <p class="file_title"><%= product.title %></p>
                 <p class="file_data"><%= product.description %></p>
+                <div class="buttons">
+                  <button type="button" class="btn btn-dark delete-btn" data-id="<%= product._id %>" id="buy">Buy Now</button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 </section>
+
+<script>
+
+  document.getElementById('buy').addEventListener('click', () => {
+    const id = event.target.dataset.id
+    console.log(id)
+    fetch(`/clothes/api/${id}`, {
+      method: "PUT"
+    })
+    .then(res => res.json())
+    .catch(error => console.log(error))
+  })
+</script>
