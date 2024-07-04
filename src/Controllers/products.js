@@ -1,6 +1,7 @@
 require('dotenv').config()
 const cloudinary = require('cloudinary').v2
 const productSchema = require('../Modules/products')
+const { User } = require('../Modules/users')
 const Redis = require('ioredis')
 
 const CLOUD_NAME= process.env.CLOUD_NAME;
@@ -9,73 +10,6 @@ const API_SECRET=process.env.API_SECRET
 const REDIS_URL=process.env.REDIS_URL
 
 const redis = new Redis(REDIS_URL);
-
-const get_file_upload = (req, res) => {
-    res.render('add-products')
-}
-const post_add_file = async (req, res) => {
-    try {
-
-        if (!req.files || Object.keys(req.files).length === 0) {
-            return res.status(400).send('No files were uploaded.');
-            }
-            
-        res.status(202).json({ message: 'File upload request received. Processing in progress.' });
-        (async () => {
-            try {
-              await redis.del('products');
-              console.log('Key deleted successfully');
-            } catch (err) {
-              console.error('Error deleting key:', err);
-            }
-          })();
-
-        cloudinary.config({ 
-            cloud_name: CLOUD_NAME, 
-            api_key: API_KEY, 
-            api_secret: API_SECRET
-        });
-
-        const imagesArray = Object.values(req.files).map(async file => {
-            const uploadResult = await cloudinary.uploader.upload(file.tempFilePath, {
-                        asset_folder: 'saydumlo'
-                    }).catch((error)=>{console.log(error)})
-            
-            const optimizeUrl = cloudinary.url(uploadResult.public_id, {
-                fetch_format: 'auto',
-                quality: 'auto'
-            });
-    
-            const autoCropUrl = cloudinary.url(uploadResult.public_id, {
-                crop: 'auto',
-                gravity: 'auto',
-                width: 500,
-                height: 500,
-            });
-            const obj = {
-                public_id: uploadResult.public_id,
-                url: uploadResult.url
-            }
-            return obj
-        })
-
-        const images = await Promise.all(imagesArray)
-
-
-                
-        req.body.images = images;
-        await new productSchema(req.body).save();
-
-        
-
-        // return res.status(200).json('Uplouded Successfully')
-
-    } catch(error) {
-        console.error('Error uploading file:', error);
-        res.status(500).send('Error uploading file');
-    }
-
-}
 let sort = 'default'
 let currentPage = 1
 const get_all_products = async (req, res) => {
@@ -167,7 +101,66 @@ const get_all_products = async (req, res) => {
         res.status(404).send('Something went wrong')
     }
 }
+const get_file_upload = (req, res) => {
+    res.render('add-products')
+}
+const post_add_file = async (req, res) => {
+    try {
+        const cachKey = `clothes?page:${currentPage}&sort:${sort}`
+        if (!req.files || Object.keys(req.files).length === 0) {
+            return res.status(400).send('No files were uploaded.');
+            }
+            
+        await redis.del(cachKey);
+        console.log('Key deleted successfully');
+        // res.status(202).json({ message: 'File upload request received. Processing in progress.' });
 
+        cloudinary.config({ 
+            cloud_name: CLOUD_NAME, 
+            api_key: API_KEY, 
+            api_secret: API_SECRET
+        });
+
+        const imagesArray = Object.values(req.files).map(async file => {
+            const uploadResult = await cloudinary.uploader.upload(file.tempFilePath, {
+                        asset_folder: 'saydumlo'
+                    }).catch((error)=>{console.log(error)})
+            
+            const optimizeUrl = cloudinary.url(uploadResult.public_id, {
+                fetch_format: 'auto',
+                quality: 'auto'
+            });
+    
+            const autoCropUrl = cloudinary.url(uploadResult.public_id, {
+                crop: 'auto',
+                gravity: 'auto',
+                width: 500,
+                height: 500,
+            });
+            const obj = {
+                public_id: uploadResult.public_id,
+                url: uploadResult.url
+            }
+            return obj
+        })
+
+        const images = await Promise.all(imagesArray)
+
+
+                
+        req.body.images = images;
+        await new productSchema(req.body).save();
+
+        
+
+        return res.status(200).json('Uplouded Successfully')
+
+    } catch(error) {
+        console.error('Error uploading file:', error);
+        res.status(500).send('Error uploading file');
+    }
+
+}
 const delete_product = async (req, res) => {
     try {
         const cachKey = `clothes?page:${currentPage}&sort:${sort}`
@@ -210,5 +203,34 @@ const get_specific_product = async (req, res) => {
     }
     
 }
+const put_purchase_product = async (req, res) => {
+    try {
+        const user_id = req.user.userId
+        const product = await productSchema.findById(req.params.id);
 
-module.exports = { get_file_upload, post_add_file, get_all_products, delete_product, get_specific_product }
+        if(!product) {
+            return res.status(404).json('Product not found');
+        }
+
+        if(product.status !== 'available') {
+            return res.status(400).json('Product is not available for purchase');
+        }
+
+        product.status = 'reserved';
+        await product.save();
+
+        const user = await User.findById(user_id);
+
+        if(!user) {
+            return res.status(404).json('User is not found, please log in');
+        }
+        user.purchasedProductsIds.push(product._id);
+        await user.save();
+        return res.status(200).json('Products has been sold')
+    } catch(error) {
+        console.log('Error: ' + error)
+        res.status(404).send('Something went wrong')
+    }
+}
+
+module.exports = { get_file_upload, post_add_file, get_all_products, delete_product, get_specific_product, put_purchase_product }
