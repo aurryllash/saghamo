@@ -76,12 +76,14 @@ const post_add_file = async (req, res) => {
     }
 
 }
+let sort = 'default'
+let currentPage = 1
 const get_all_products = async (req, res) => {
     try {
 
-        var sort = req.query.sort || 'default' 
+        sort = req.query.sort || 'default' 
         const currentSort = sort
-        const currentPage = +req.query.page || 1
+        currentPage = +req.query.page || 1
         var search = req.query.search
         const cachKey = `clothes?page:${currentPage}&sort:${currentSort}`
         const limit = 4;
@@ -159,22 +161,17 @@ const get_all_products = async (req, res) => {
         } else {
             console.log('quaried from database')
         }
-
         return res.render('products', { products, totalPages, currentPage, currentSort, search })
     } catch(error) {
         console.log('Error: ' + error)
         res.status(404).send('Something went wrong')
     }
 }
+
 const delete_product = async (req, res) => {
     try {
-        var sort = req.query.sort || 'default' 
-        const currentSort = sort
-        const currentPage = +req.query.page || 1
-        const cachKey = `clothes?page:${currentPage}&sort:${currentSort}`
-    
+        const cachKey = `clothes?page:${currentPage}&sort:${sort}`
         const products = await productSchema.findByIdAndDelete(req.params.id)
-        console.log(req.params.id)
         if(!products) {
             return res.status(400).send('No files were find.')
         }
