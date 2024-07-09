@@ -3,11 +3,14 @@ const cloudinary = require('cloudinary').v2
 const productSchema = require('../Modules/products')
 const { User } = require('../Modules/users')
 const Redis = require('ioredis')
+const nodemailer = require('nodemailer')
 
 const CLOUD_NAME= process.env.CLOUD_NAME;
 const API_KEY=process.env.API_KEY 
 const API_SECRET=process.env.API_SECRET
 const REDIS_URL=process.env.REDIS_URL
+const GMAIL_URL = process.env.GMAIL_URL
+const GMAIL_PASSWORD = process.env.GMAIL_PASSWORD
 
 const redis = new Redis(REDIS_URL);
 let sort = 'default'
@@ -203,9 +206,32 @@ const get_specific_product = async (req, res) => {
     }
     
 }
+function sendEmail() {
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: GMAIL_URL,
+          pass: GMAIL_PASSWORD
+        }
+      });
+      
+      var mailOptions = {
+        from: GMAIL_URL,
+        to: 'benil92266@carspure.com',
+        subject: 'Sending Email using Node.js',
+        text: 'That was easy!'
+      };
+      
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+      });
+}
 const put_purchase_product = async (req, res) => {
     try {
-
         const user_id = req.user.userId
 
         const product = await productSchema.findOneAndUpdate(
@@ -225,6 +251,8 @@ const put_purchase_product = async (req, res) => {
         user.purchasedProductsIds.push(product._id);
         await user.save();
         
+        sendEmail()
+
         return res.status(200).json('Products has been sold')
     } catch(error) {
         console.log('Error: ' + error)

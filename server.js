@@ -4,6 +4,7 @@ const mongoose = require('mongoose')
 const fileUpload = require('express-fileupload');
 var cookieParser = require('cookie-parser')
 
+
 const productsRoute = require('./src/Routes/products')
 const registrationRoute = require('./src/Routes/registration')
 const loginRoute = require('./src/Routes/login')
@@ -36,8 +37,15 @@ mongoose.connect('mongodb://127.0.0.1:27017/aws')
     })
 
 
-app.get('/home', (req, res) => {
-    res.render('home')
+
+app.get('/home', async (req, res) => {
+    try  {
+        
+        res.render('home')
+    } catch(error) {
+        return res.status(404).json('Somthing Went Wrong!')
+    }
+    
 })
 app.get('/', (req, res) => {
     res.redirect('/home')
