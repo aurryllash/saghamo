@@ -205,19 +205,17 @@ const get_specific_product = async (req, res) => {
 }
 const put_purchase_product = async (req, res) => {
     try {
+
         const user_id = req.user.userId
-        const product = await productSchema.findById(req.params.id);
 
-        if(!product) {
+        const product = await productSchema.findOneAndUpdate(
+            { _id: req.params.id, status: 'available' },
+            { $set: { status: 'reserved' }},
+            { new: true } )
+
+        if (!product) {
             return res.status(404).json('Product not found');
-        }
-
-        if(product.status !== 'available') {
-            return res.status(400).json('Product is not available for purchase');
-        }
-
-        product.status = 'reserved';
-        await product.save();
+          }
 
         const user = await User.findById(user_id);
 
@@ -226,6 +224,7 @@ const put_purchase_product = async (req, res) => {
         }
         user.purchasedProductsIds.push(product._id);
         await user.save();
+        
         return res.status(200).json('Products has been sold')
     } catch(error) {
         console.log('Error: ' + error)

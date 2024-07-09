@@ -56,6 +56,8 @@
             <div class="file_body">
                 <p class="file_title"><%= product.title %></p>
                 <p class="file_data"><%= product.description %></p>
+                <p class="file_data"><%= product.price %>₾</p>
+                <p class="file_data">Status: <%= product.status %></p>
                 <div class="buttons">
                   <button type="button" class="btn btn-dark delete-btn" data-id="<%= product._id %>" id="buy">Buy Now</button>
               </div>

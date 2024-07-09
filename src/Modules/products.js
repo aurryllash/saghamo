@@ -31,7 +31,6 @@ const productSchema = new mongoose.Schema({
 }, {
     collection: 'products',
     timestamps: true,
-    read: 'nearest',
     writeConcern: {
         w: 'majority',
         j: true,
