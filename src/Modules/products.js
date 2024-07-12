@@ -1,4 +1,5 @@
 const mongoose = require('mongoose')
+const { Schema } = mongoose;
 
 const productSchema = new mongoose.Schema({
     title: {
@@ -17,6 +18,10 @@ const productSchema = new mongoose.Schema({
         type: String,
         enum: ['available', 'reserved', 'sold'],
         default: 'available'
+    },
+    reservedBy: {
+        type: Schema.Types.ObjectId,
+        ref: 'users'
     },
     images: [
         {

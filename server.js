@@ -38,14 +38,8 @@ mongoose.connect('mongodb://127.0.0.1:27017/aws')
 
 
 
-app.get('/home', async (req, res) => {
-    try  {
-        
-        res.render('home')
-    } catch(error) {
-        return res.status(404).json('Somthing Went Wrong!')
-    }
-    
+app.get('/home', (req, res) => {
+    res.render('home')
 })
 app.get('/', (req, res) => {
     res.redirect('/home')

@@ -25,7 +25,10 @@ const usersSchema = new Schema({
             type: Schema.Types.ObjectId,
             ref: 'products'
         }
-    ]
+    ],
+    phone: {
+        type: Number
+    }
     }, {
         collection: 'users',
         timestamps: true,

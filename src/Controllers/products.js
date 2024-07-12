@@ -4,6 +4,7 @@ const productSchema = require('../Modules/products')
 const { User } = require('../Modules/users')
 const Redis = require('ioredis')
 const nodemailer = require('nodemailer')
+const { ObjectId } = require('mongodb');
 
 const CLOUD_NAME= process.env.CLOUD_NAME;
 const API_KEY=process.env.API_KEY 
@@ -15,6 +16,7 @@ const GMAIL_PASSWORD = process.env.GMAIL_PASSWORD
 const redis = new Redis(REDIS_URL);
 let sort = 'default'
 let currentPage = 1
+
 const get_all_products = async (req, res) => {
     try {
 
@@ -23,17 +25,14 @@ const get_all_products = async (req, res) => {
         currentPage = +req.query.page || 1
         var search = req.query.search
         const cachKey = `clothes?page:${currentPage}&sort:${currentSort}`
-        const limit = 4;
+        const limit = 8;
 
         if(!search) {
-
             var countResult = await productSchema.countDocuments();
             var totalProducts = countResult > 0 ? countResult : 0;
             var totalPages = Math.ceil(totalProducts / limit);
-
         }
 
-        
         const redisProduct = await redis.get(cachKey);
         if(redisProduct && !search) {
 
@@ -71,10 +70,9 @@ const get_all_products = async (req, res) => {
                 $count: 'totalProducts'
             }
         ])
-        var totalProducts = countResult[0].totalProducts > 0 ? countResult[0].totalProducts : 0;
+        let totalProducts = (countResult[0] && countResult[0].totalProducts > 0) ? countResult[0].totalProducts : 0;
         var totalPages = Math.ceil(totalProducts / limit);
         }
-
 
         const page = (currentPage-1)*limit
         const products = await productSchema.aggregate([
@@ -98,6 +96,7 @@ const get_all_products = async (req, res) => {
         } else {
             console.log('quaried from database')
         }
+
         return res.render('products', { products, totalPages, currentPage, currentSort, search })
     } catch(error) {
         console.log('Error: ' + error)
@@ -206,7 +205,7 @@ const get_specific_product = async (req, res) => {
     }
     
 }
-function sendEmail() {
+function sendEmail(username, useremail, product_id, price, order_date) {
     var transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
@@ -218,8 +217,75 @@ function sendEmail() {
       var mailOptions = {
         from: GMAIL_URL,
         to: 'benil92266@carspure.com',
-        subject: 'Sending Email using Node.js',
-        text: 'That was easy!'
+        subject: `New Purchase Notification - Order #${product_id}`,
+        text: `
+        Hello Admin,
+
+        You have a new purchase on your e-commerce site. Here are the details of the order:
+
+        Customer Information:
+        - Name: ${username}
+        - Email: ${useremail}
+        - Phone Number: 5** *** ***
+
+        Shipping Address:
+        - Street Address: ***********
+        - City: ***********
+
+        Order Details:
+        - Product Id: ${product_id}
+        - Order Date: ${order_date}
+
+        Total Amount: ${price} GEL
+
+        Thank you for using our e-commerce platform!
+
+        Best regards,
+
+        Your Second-Hand Company
+        contact@saydumlo.com
+        (555) 123-4567`
+      };
+      
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+      });
+}
+function sendEmailForClient(username, user_email, product_id, price, order_date, product_name) {
+    var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: GMAIL_URL,
+          pass: GMAIL_PASSWORD
+        }
+      });
+      
+      var mailOptions = {
+        from: GMAIL_URL,
+        to: user_email,
+        subject: `Order Confirmation - Order #${product_id}`,
+        text: `
+        Hello ${username},
+
+        Thank you for your purchase on our e-commerce site. Your order has been successfully processed. Here are the details:
+        Order Number: ${product_id}
+        Order Date: ${order_date}
+
+        Product Name: ${product_name}
+        Amount: ${price} GEL
+
+        Please feel free to contact us at 5** *** *** if you have any questions or concerns regarding your order.
+
+        Thank you again for shopping with us!
+
+        Best regards,
+
+        SAYDUMLO
+        `
       };
       
       transporter.sendMail(mailOptions, function(error, info){
@@ -233,31 +299,68 @@ function sendEmail() {
 const put_purchase_product = async (req, res) => {
     try {
         const user_id = req.user.userId
-
-        const product = await productSchema.findOneAndUpdate(
-            { _id: req.params.id, status: 'available' },
-            { $set: { status: 'reserved' }},
-            { new: true } )
-
-        if (!product) {
-            return res.status(404).json('Product not found');
-          }
-
         const user = await User.findById(user_id);
+        const objectId = new ObjectId(user_id)
 
         if(!user) {
-            return res.status(404).json('User is not found, please log in');
+            throw new Error('User is not found, please log in')
         }
+
+        let product = await productSchema.findOneAndUpdate(
+            { _id: req.params.id, status: 'available' },
+            { $set: { status: 'reserved', reservedBy: user_id }},
+            { new: true } )
+        console.log(product.reservedBy)
+
+        if (!product) {
+            throw new Error('Product not found, already sold or reserved')
+        } 
+
+        const reservedByObjectId = new ObjectId(product.reservedBy);
+
+        if (!objectId.equals(reservedByObjectId)) {
+            throw new Error('Product not found, already sold or reserved from objectid');
+        }
+
+        // peyments function here if successfull go on!!!
+
+        product = await productSchema.findOneAndUpdate(
+            { _id: req.params.id, status: 'reserved', reservedBy: user_id },
+            { $set: { status: 'sold'  }},
+            { new: true } )
+        
         user.purchasedProductsIds.push(product._id);
         await user.save();
         
-        sendEmail()
+        // sendEmail(user.username, user.email, product._id, product.price, product.updatedAt)
+        // sendEmailForClient(user.username, user.email, product._id, product.price, product.updatedAt, product.title)
 
         return res.status(200).json('Products has been sold')
     } catch(error) {
+        const product = await productSchema.findOneAndUpdate(
+            { _id: req.params.id, status: 'reserved' },
+            { $set: { status: 'available', reservedBy: null }},
+            { new: true } )
         console.log('Error: ' + error)
-        res.status(404).send('Something went wrong')
+        res.status(500).send('Something went wrong')
+    }
+}
+const put_change_status = async (req, res) => {
+    try {
+        const product = await productSchema.findById(req.params.id);
+        if(!product) {
+            throw new Error('Product not found');
+        }
+        const status = product.status === 'available' ? 'sold' : "available"
+        console.log('status: ' + status)
+        product.status = status
+        product.save()
+
+        return res.status(200).json('update successfully!')
+    } catch(error) {
+        console.log('Error: ' + error)
+        res.status(500).send('Something went wrong')
     }
 }
 
-module.exports = { get_file_upload, post_add_file, get_all_products, delete_product, get_specific_product, put_purchase_product }
+module.exports = { get_file_upload, post_add_file, get_all_products, delete_product, get_specific_product, put_purchase_product, put_change_status }

@@ -30,7 +30,7 @@ const post_login = async (req, res) => {
             sameSite: 'strict',
             maxAge: jwtExpireSeconds * 60000
         })
-        res.status(200).json('Login successfully')
+        res.status(200).redirect('/home')
     } catch(error) {
         console.log('Error' + error)
         res.status(500).json({ error: 'Login failed' });
