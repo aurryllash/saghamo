@@ -107,15 +107,15 @@ const get_file_upload = (req, res) => {
     res.render('add-products')
 }
 const post_add_file = async (req, res) => {
+    
     try {
         const cachKey = `clothes?page:${currentPage}&sort:${sort}`
+        await redis.del(cachKey);
+        console.log('Key deleted successfully');
+        
         if (!req.files || Object.keys(req.files).length === 0) {
             return res.status(400).send('No files were uploaded.');
             }
-            
-        await redis.del(cachKey);
-        console.log('Key deleted successfully');
-        // res.status(202).json({ message: 'File upload request received. Processing in progress.' });
 
         cloudinary.config({ 
             cloud_name: CLOUD_NAME, 
@@ -128,17 +128,6 @@ const post_add_file = async (req, res) => {
                         asset_folder: 'saydumlo'
                     }).catch((error)=>{console.log(error)})
             
-            const optimizeUrl = cloudinary.url(uploadResult.public_id, {
-                fetch_format: 'auto',
-                quality: 'auto'
-            });
-    
-            const autoCropUrl = cloudinary.url(uploadResult.public_id, {
-                crop: 'auto',
-                gravity: 'auto',
-                width: 500,
-                height: 500,
-            });
             const obj = {
                 public_id: uploadResult.public_id,
                 url: uploadResult.url
@@ -147,9 +136,7 @@ const post_add_file = async (req, res) => {
         })
 
         const images = await Promise.all(imagesArray)
-
-
-                
+     
         req.body.images = images;
         await new productSchema(req.body).save();
 

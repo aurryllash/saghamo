@@ -1,0 +1,12 @@
+{
+    "orderItems": [{ "product": "60c72b2f9b1e8e5e4c8a4567" },
+        { "product": "667d6211f80c68372131106e" }],
+    "shippingAddress1": "123 Main Street",
+    "shippingAddress2": "Apt 4B",
+    "city": "New York",
+    "zip": "10001",
+    "phone": "+1234567890",
+    "status": "Pending",
+    "price": 99.99,
+    "user": "667055e903c99c164784c967"
+}

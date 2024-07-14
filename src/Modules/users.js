@@ -51,5 +51,5 @@ function userValidate(user) {
     return schema.validate(user)
 }
 
-module.exports.User = mongoose.model('User', usersSchema);
+module.exports.User = mongoose.model('users', usersSchema);
 module.exports.UserValidate = userValidate

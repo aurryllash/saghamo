@@ -9,6 +9,6 @@ router.get('/', get_all_products)
 router.delete('/file/:id', requirePermits('delete_product'), delete_product)
 router.get('/api/:id', get_specific_product)
 router.put('/purchase/:id', requireLogin, put_purchase_product )
-router.put('/status/change/:id', put_change_status)
+router.put('/status/change/:id', requirePermits('status_change'), put_change_status)
 
 module.exports = router

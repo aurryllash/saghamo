@@ -6,7 +6,8 @@ const roles = {
         'read_product',
         'see_users',
         'delete_user',
-        'change_user_role'
+        'change_user_role',
+        'status_change'
     ],
     meneger: [
         'add_product',
