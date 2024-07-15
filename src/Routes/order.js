@@ -1,11 +1,24 @@
 const express = require('express');
 const router = express.Router()
+const mongoose = require('mongoose')
 const OrderSchema = require('../Modules/order')
 const orderItemSchema = require('../Modules/order-item');
+const ProductSchema = require('../Modules/products')
+
 router.post('/', async (req, res) => {
     try {
+
         
+
         const orderItemsIds = await Promise.all(req.body.orderItems.map(async order => {
+            const reservedProduct = await ProductSchema.findOne(
+                { _id: order.product, status: 'reserved', reservedBy: req.body.user }
+            );
+
+            if (!reservedProduct) {
+                throw new Error(`Product with ID ${order.product} is no longer available.`);
+            }
+
             let newOrderItem = new orderItemSchema({
                 product: order.product,
             })
@@ -13,15 +26,17 @@ router.post('/', async (req, res) => {
             await newOrderItem.save()
 
             return newOrderItem._id
+
         }))
-        // let totalPrice = 0
+
         const price = await Promise.all(orderItemsIds.map(async itemsId => {
             let newOrderItems = await orderItemSchema.findById(itemsId).populate('product', 'price');
             let price = newOrderItems.product.price;
-            // totalPrice += price
             return price
         }))
+        
         const totalPrice = price.reduce((a, b) => a + b, 0)
+
         let order = new OrderSchema({
             orderItems: orderItemsIds,
             shippingAddress1: req.body.shippingAddress1,
@@ -33,10 +48,24 @@ router.post('/', async (req, res) => {
             totalPrice: totalPrice,
             user: req.body.user, 
         })
-        await order.save()
+
+        // BOG payment - payment method here if payment saccess go on 
+
+        await Promise.all(req.body.orderItems.map(async order => {
+
+            const reservedProduct = await ProductSchema.findOneAndUpdate(
+                { _id: order.product, status: 'reserved', reservedBy: req.body.user },
+                { $set: { status: 'sold' } },
+                { new: true }
+            )
+            
+        }))
+
+        order = await order.save()
 
         if(!order)
             return res.status(400).send('The order cannot be created')
+
         res.send(order)
     } catch(error) {
         console.log("Error: " + error)

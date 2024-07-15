@@ -10,3 +10,16 @@
     "price": 99.99,
     "user": "667055e903c99c164784c967"
 }
+
+{
+    "orderItems": [{ "product": "6687f0f0fbd4cbc622c80b5f" },
+        { "product": "668ab08e3c8eda31ae4a090e" }],
+    "shippingAddress1": "5656 Main Street",
+    "shippingAddress2": "Apt 4B",
+    "city": "Tbilisi",
+    "zip": "10001",
+    "phone": "+1234567890",
+    "status": "Pending",
+    "price": 99.99,
+    "user": "667052c4c6f961a01755da75"
+}
