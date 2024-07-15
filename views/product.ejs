@@ -61,6 +61,9 @@
                 <div class="buttons">
                   <button type="button" class="btn btn-dark delete-btn" data-id="<%= product._id %>" id="buy">Buy Now</button>
                 </div>
+                <div class="buttons">
+                  <button type="button" class="btn btn-dark delete-btn" data-id="<%= product._id %>" id="cart">Add To cart</button>
+                </div>
                 <div class="buttons mt-2">
                   
                   <button type="button" class="btn btn-dark update-status-btn" data-id="<%= product._id %>" id="status">Make it <%= product.status == 'available' ? 'sold' : 'available'  %></button>
@@ -88,6 +91,19 @@
     console.log(id)
     fetch(`/clothes/status/change/${id}`, {
       method: "PUT"
+    })
+    .then(res => res.json())
+    .then(res => {
+      window.location.reload()
+    })
+    .catch(error => console.log(error))
+  })
+
+  document.getElementById('cart').addEventListener('click', () => {
+    const id = event.target.dataset.id
+    console.log(id)
+    fetch(`/cart/${id}`, {
+      method: "post"
     })
     .then(res => res.json())
     .then(res => {

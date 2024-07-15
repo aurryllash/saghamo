@@ -8,10 +8,9 @@ var cookieParser = require('cookie-parser')
 const productsRoute = require('./src/Routes/products')
 const registrationRoute = require('./src/Routes/registration')
 const loginRoute = require('./src/Routes/login')
-const userRoute = require('./src/Routes/user')
+const cartRoute = require('./src/Routes/cart')
 const usersRoute = require('./src/Routes/users')
 const orderRoute = require('./src/Routes/order')
-
 
 app.use(cookieParser())
 app.use(express.urlencoded({ extended: true }))
@@ -24,7 +23,7 @@ app.use(fileUpload({ useTempFiles: true,tempFileDir: '/tmp/' }));
 app.use('/clothes', productsRoute)
 app.use('/registration', registrationRoute)
 app.use('/login', loginRoute)
-app.use('/user', userRoute)
+app.use('/cart', cartRoute)
 app.use('/users', usersRoute)
 app.use('/order', orderRoute)
 

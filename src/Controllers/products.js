@@ -338,8 +338,9 @@ const put_change_status = async (req, res) => {
         if(!product) {
             throw new Error('Product not found');
         }
+        
         const status = product.status === 'available' ? 'sold' : "available"
-        console.log('status: ' + status)
+
         product.status = status
         product.save()
 
