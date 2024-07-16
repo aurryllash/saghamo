@@ -80,7 +80,7 @@ const delete_from_cart = async (req, res) => {
 }
 const put_ready_for_order = async (req, res) => {
     try {
-        const cart = await CartSchema.findOne({ user: req.user.userId })
+        var cart = await CartSchema.findOne({ user: req.user.userId })
             // .populate('product')
 
         if(!cart)
@@ -90,17 +90,22 @@ const put_ready_for_order = async (req, res) => {
             const productId = product
 
             const productStatus = await productSchema.findOneAndUpdate(
-                { _id: productId, status: 'available' },
+                { _id: productId, status: { $ne: 'available' }, reservedBy: { $ne: req.user.userId } },
                 { $set: { status: 'reserved', reservedBy: req.user.userId } },
                 { new: true }
             )
-            if(!productStatus) {
-                await CartSchema.findOneAndUpdate(
+            if(productStatus) {
+                cart = await CartSchema.findOneAndUpdate(
                     { _id: cart._id },
-                    { $pull: { product: productId } }
+                    { $pull: { product: productId } }, {
+                        new: true
+                    }
                 );
+                
             }
+            return productStatus
         }))
+        console.log(cart)
         
         res.send(cart)
     } catch(error) {
