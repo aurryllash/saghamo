@@ -13,7 +13,6 @@ const get_user = async (req, res) => {
         res.status(404).json('Something Went Wrong.')
     }
 }
-
 const post_cart = async (req, res) => {
     try {
         const user_id = req.user.userId
@@ -29,7 +28,6 @@ const post_cart = async (req, res) => {
                 user: user_id,
                 product: product_id
             });
-            console.log('new Cart: ' + newCart)
 
             await newCart.save()
         } else {
@@ -47,24 +45,63 @@ const post_cart = async (req, res) => {
 const get_cart = async (req, res) => {
     try {
         const cart = await CartSchema.findOne({ user: req.user.userId });
-        console.log(cart)
+        if(!cart)
+            return res.status(404).json('Cart is empty')
         res.send(cart)
     } catch(error) {
         console.log('Error: ' + error)
         res.status(404).json('Something Went Wrong.')
     }
 }
-const delete_form_cart = async (req, res) => {
+const delete_from_cart = async (req, res) => {
     try {
-        const cart = await CartSchema.findOneAndUpdate(
-            { user: req.user.userId },
-            { $pull: { product: req.params.id } },
-            { new: true }
-        );
+
+        const cart = await CartSchema.findOne({ user: req.user.userId })
+
         if (!cart) {
             return res.status(404).json({ message: 'Cart not found' });
         }
-        console.log(cart)
+
+        const product = cart.product.findIndex(productId => productId.toString() == req.params.id)
+
+        if (product === -1) {
+            return res.status(404).json({ message: 'Product not found in cart' });
+        }
+
+        cart.product.splice(product, 1);
+
+        await cart.save()
+
+        res.send(cart)
+    } catch(error) {
+        console.log('Error: ' + error)
+        res.status(404).json('Something Went Wrong.')
+    }
+}
+const put_ready_for_order = async (req, res) => {
+    try {
+        const cart = await CartSchema.findOne({ user: req.user.userId })
+            // .populate('product')
+
+        if(!cart)
+            return res.status(404).json('Cart is empty')
+
+        const cartProducts = await Promise.all(cart.product.map(async product =>{
+            const productId = product
+
+            const productStatus = await productSchema.findOneAndUpdate(
+                { _id: productId, status: 'available' },
+                { $set: { status: 'reserved', reservedBy: req.user.userId } },
+                { new: true }
+            )
+            if(!productStatus) {
+                await CartSchema.findOneAndUpdate(
+                    { _id: cart._id },
+                    { $pull: { product: productId } }
+                );
+            }
+        }))
+        
         res.send(cart)
     } catch(error) {
         console.log('Error: ' + error)
@@ -72,4 +109,4 @@ const delete_form_cart = async (req, res) => {
     }
 }
 
-module.exports = { get_user, post_cart, get_cart, delete_form_cart }
+module.exports = { get_user, post_cart, get_cart, delete_from_cart, put_ready_for_order }
