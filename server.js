@@ -32,6 +32,8 @@ mongoose.connect('mongodb://127.0.0.1:27017/aws')
     .then(() => {
         console.log("database is connected successfully!")
         app.listen(3000, () => console.log('Express server is running on port 3000'))
+
+        // require('./src/Backgorund-Tasks/reservationCleanup')
     })
     .catch(error => {
         console.log("Error connecting to mongoDB, Error: " + error)

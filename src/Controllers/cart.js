@@ -3,16 +3,6 @@ const { User } = require('../Modules/users')
 const productSchema = require('../Modules/products.js')
 const CartSchema = require('../Modules/cart')
 
-const get_user = async (req, res) => {
-    try {
-        const user = await User.findOne({ _id: req.user.userId }).lean()
-        const { password, ...userData } = user;
-        res.send(userData)
-    } catch(error) {
-        console.log('Error: ' + error)
-        res.status(404).json('Something Went Wrong.')
-    }
-}
 const post_cart = async (req, res) => {
     try {
         const user_id = req.user.userId
@@ -44,7 +34,8 @@ const post_cart = async (req, res) => {
 }
 const get_cart = async (req, res) => {
     try {
-        const cart = await CartSchema.findOne({ user: req.user.userId });
+        const cart = await CartSchema.findOne({ user: req.user.userId })
+            .populate('product');
         if(!cart)
             return res.status(404).json('Cart is empty')
         res.send(cart)
@@ -86,26 +77,27 @@ const put_ready_for_order = async (req, res) => {
         if(!cart)
             return res.status(404).json('Cart is empty')
 
-        const cartProducts = await Promise.all(cart.product.map(async product =>{
+        const cartProducts = await Promise.all(cart.product.map(async product => {
             const productId = product
 
-            const productStatus = await productSchema.findOneAndUpdate(
-                { _id: productId, status: { $ne: 'available' }, reservedBy: { $ne: req.user.userId } },
-                { $set: { status: 'reserved', reservedBy: req.user.userId } },
-                { new: true }
-            )
-            if(productStatus) {
+            const productStatus = await productSchema.findOne(
+                { _id: productId, $or: [{ status: 'available' }, { reservedBy: req.user.userId }] })
+
+            if(productStatus && productStatus.status === 'available') {
+                await productSchema.updateOne(
+                    { _id: productId },
+                    { $set: { status: 'reserved', reservedBy: req.user.userId } }
+                )
+            } else if(!productStatus) {
                 cart = await CartSchema.findOneAndUpdate(
-                    { _id: cart._id },
-                    { $pull: { product: productId } }, {
-                        new: true
-                    }
-                );
-                
+                            { _id: cart._id },
+                            { $pull: { product: productId } }, {
+                                new: true
+                            }
+                        );
             }
             return productStatus
         }))
-        console.log(cart)
         
         res.send(cart)
     } catch(error) {
@@ -114,4 +106,4 @@ const put_ready_for_order = async (req, res) => {
     }
 }
 
-module.exports = { get_user, post_cart, get_cart, delete_from_cart, put_ready_for_order }
+module.exports = { post_cart, get_cart, delete_from_cart, put_ready_for_order }

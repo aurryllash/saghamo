@@ -2,11 +2,10 @@ const mongoose = require('mongoose')
 const OrderSchema = require('../Modules/order')
 const orderItemSchema = require('../Modules/order-item');
 const ProductSchema = require('../Modules/products')
+const CartSchema = require('../Modules/cart')
 
 const post_order = async (req, res) => {
     try {
-
-        
 
         const orderItemsIds = await Promise.all(req.body.orderItems.map(async order => {
             const reservedProduct = await ProductSchema.findOne(
@@ -53,16 +52,22 @@ const post_order = async (req, res) => {
 
             const reservedProduct = await ProductSchema.findOneAndUpdate(
                 { _id: order.product, status: 'reserved', reservedBy: req.body.user },
-                { $set: { status: 'sold' } },
+                { $set: { status: 'sold', reservedBy: null } },
                 { new: true }
             )
-            
         }))
 
         order = await order.save()
 
         if(!order)
             return res.status(400).send('The order cannot be created')
+
+        const removeFromCart = await CartSchema.updateMany(
+            { user: req.body.user },
+            { $set: { product: [] } },
+            { new: true }
+        )
+        console.log(removeFromCart)
 
         res.send(order)
     } catch(error) {
