@@ -7,7 +7,8 @@ const {
     put_change_order_status, 
     delete_order,
     get_total_sales,
-    get_user_orders 
+    get_user_orders,
+    handlePaymentCallback 
 } = require('../Controllers/order')
 
 
@@ -17,6 +18,7 @@ router.get('/:id', get_order )
 router.put('/:id', put_change_order_status )
 router.delete('/:id', delete_order)
 router.get('/get/totalSales', get_total_sales )
-router.get('/get/userorders/:userId', get_user_orders)
+router.get('/get/userorders/:userId', get_user_orders);
+router.post('/payment-callback', handlePaymentCallback)
 
 module.exports = router

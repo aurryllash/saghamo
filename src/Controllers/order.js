@@ -3,6 +3,7 @@ const OrderSchema = require('../Modules/order')
 const orderItemSchema = require('../Modules/order-item');
 const ProductSchema = require('../Modules/products')
 const CartSchema = require('../Modules/cart')
+const axios = require('axios')
 
 const post_order = async (req, res) => {
     try {
@@ -46,33 +47,85 @@ const post_order = async (req, res) => {
             user: req.body.user, 
         })
 
-        // BOG payment - payment method here if payment saccess go on 
+        // BOG payment - payment method here if payment saccess go on
+        const paymentData = {
+            // Fill in the required payment details according to BOG's API documentation
+            amount: totalPrice,
+            currency: 'GEL',
+            order_id: order._id,
+            description: 'Your order description',
+            success_url: 'https://yourdomain.com/payment-success',
+            fail_url: 'https://yourdomain.com/payment-failure',
+            callback_url: 'https://yourdomain.com/payment-callback'
+        }; 
 
-        await Promise.all(req.body.orderItems.map(async order => {
+        const bogResponse = await axios.post('https://bog-api-url-to-generate-payment', paymentData);
 
-            const reservedProduct = await ProductSchema.findOneAndUpdate(
-                { _id: order.product, status: 'reserved', reservedBy: req.body.user },
-                { $set: { status: 'sold', reservedBy: null } },
-                { new: true }
-            )
-        }))
+        if (bogResponse.status !== 200) {
+            return res.status(500).send('Error generating payment URL');
+        }
 
-        order = await order.save()
+        const paymentUrl = bogResponse.data.payment_url;
 
-        if(!order)
-            return res.status(400).send('The order cannot be created')
+        // Redirect user to BOG payment page
+        res.status(200).json({ paymentUrl });
 
-        const removeFromCart = await CartSchema.updateMany(
-            { user: req.body.user },
-            { $set: { product: [] } },
-            { new: true }
-        )
-        console.log(removeFromCart)
+        // await Promise.all(req.body.orderItems.map(async order => {
+
+        //     const reservedProduct = await ProductSchema.findOneAndUpdate(
+        //         { _id: order.product, status: 'reserved', reservedBy: req.body.user },
+        //         { $set: { status: 'sold', reservedBy: null } },
+        //         { new: true }
+        //     )
+        // }))
+
+        // order = await order.save()
+
+        // if(!order)
+        //     return res.status(400).send('The order cannot be created')
+
+        // const removeFromCart = await CartSchema.updateMany(
+        //     { user: req.body.user },
+        //     { $set: { product: [] } },
+        //     { new: true }
+        // )
 
         res.send(order)
     } catch(error) {
         console.log("Error: " + error)
         return res.status(404).json('something went wrong')
+    }
+}
+const handlePaymentCallback = async (req, res) => {
+    try {
+        const { order_id, status } = req.body;
+        const order = await OrderSchema.findById(order_id)
+
+        if (!order) {
+            return res.status(404).send('Order not found');
+        }
+        
+        if(status === 'success') {
+            order.status = 'paid'
+
+            await Promise.all(order.orderItems.map(async order => {
+                await ProductSchema.findByIdAndUpdate(
+                    { _id: order },
+                    { status: 'sold', reservedBy: null }
+                )
+
+            }))
+            await order.save();
+        } else {
+            order.status = 'fail'
+            await order.save();
+        }
+
+        res.status(200).send('Payment status updated');
+
+    } catch(error) {
+        console.log("Error: " + error);
+        return res.status(500).json('Something went wrong from payment callback section');
     }
 }
 const get_order_list = async (req, res) => {
@@ -159,5 +212,6 @@ module.exports = {
     put_change_order_status,
     delete_order,
     get_total_sales,
-    get_user_orders
+    get_user_orders,
+    handlePaymentCallback
  }
