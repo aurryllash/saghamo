@@ -46,6 +46,7 @@ function userValidate(user) {
         email: joi.string().min(5).max(255).required().email(),
         role: joi.string().valid('user', 'admin'),
         password: joi.string().min(5).max(100).required(),
+        phone: joi.number().optional(),
     })
 
     return schema.validate(user)

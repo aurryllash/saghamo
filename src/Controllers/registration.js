@@ -6,7 +6,7 @@ const get_registration = (req, res) => {
 }
 
 const post_registration = async (req, res) => {
-
+    console.log(req.body)
     const { error } = UserValidate(req.body);
     
     if (error) {
@@ -22,7 +22,8 @@ const post_registration = async (req, res) => {
         const user = new User({
             username: req.body.username,
             email: req.body.email,
-            password: hashedPassword
+            password: hashedPassword,
+            phone: req.body.phone
         })
         await user.save();
         return res.redirect('/login')

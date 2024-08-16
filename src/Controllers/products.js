@@ -39,7 +39,8 @@ const get_all_products = async (req, res) => {
             console.log("returned from redis")
             const products = JSON.parse(redisProduct)
 
-            return res.render('products', { products, totalPages, currentPage, currentSort, search })
+            // return res.render('products', { products, totalPages, currentPage, currentSort, search })
+            return res.send(products)
         }
         
         var sortStage = {}
@@ -97,7 +98,8 @@ const get_all_products = async (req, res) => {
             console.log('quaried from database')
         }
 
-        return res.render('products', { products, totalPages, currentPage, currentSort, search })
+        // return res.render('products', { products, totalPages, currentPage, currentSort, search })
+        return res.send(products)
     } catch(error) {
         console.log('Error: ' + error)
         res.status(404).send('Something went wrong')
